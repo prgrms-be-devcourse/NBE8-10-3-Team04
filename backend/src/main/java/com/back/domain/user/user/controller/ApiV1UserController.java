@@ -159,8 +159,8 @@ public class ApiV1UserController {
 
         User updatedUser = userService.changePassword(
                 actor.id(),
-                request.currentPassword(),
-                request.newPassword()
+                request.getCurrentPassword(),
+                request.getNewPassword()
         );
 
         // 새 토큰 발급 및 쿠키 갱신 (기존 모든 토큰은 무효화됨)
