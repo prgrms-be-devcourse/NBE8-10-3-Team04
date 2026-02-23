@@ -50,12 +50,12 @@ public class ApiV1UserController {
     public RsData<UserLoginResponse> login(
             @Valid @RequestBody UserLoginRequest reqBody
     ) {
-        User user = userService.findByLoginId(reqBody.loginId())
+        User user = userService.findByLoginId(reqBody.getLoginId())
                 .orElseThrow(() -> new ServiceException(ErrorCode.INVALID_LOGIN_ID));
 
         userService.checkPassword(
                 user,
-                reqBody.password()
+                reqBody.getPassword()
         );
 
         String accessToken = userService.genAccessToken(user);
