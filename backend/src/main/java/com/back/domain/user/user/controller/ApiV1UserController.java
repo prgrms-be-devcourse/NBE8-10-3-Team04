@@ -188,7 +188,7 @@ public class ApiV1UserController {
         User user = userService.findById(actor.id())
                 .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
 
-        userService.checkPassword(user, request.password());
+        userService.checkPassword(user, request.getPassword());
 
         return new RsData<>(
                 "200-1",
