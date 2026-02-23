@@ -32,9 +32,9 @@ public class ApiV1UserController {
 
         // 성공 시 로직 실행
         User user = userService.join(
-                request.loginId(),
-                request.password(),
-                request.email()
+                request.getLoginId(),
+                request.getPassword(),
+                request.getEmail()
         );
 
         return new RsData<>(
