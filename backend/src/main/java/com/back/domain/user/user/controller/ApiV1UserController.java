@@ -133,7 +133,7 @@ public class ApiV1UserController {
             throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
-        User updatedUser = userService.updateProfile(actor.id(), request.email());
+        User updatedUser = userService.updateProfile(actor.id(), request.getEmail());
 
         // 새 토큰 발급 및 쿠키 갱신 (기존 토큰은 무효화됨)
         String newAccessToken = userService.genAccessToken(updatedUser);
