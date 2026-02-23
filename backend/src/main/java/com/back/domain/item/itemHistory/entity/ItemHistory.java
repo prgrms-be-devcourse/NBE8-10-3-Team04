@@ -2,9 +2,7 @@ package com.back.domain.item.itemHistory.entity;
 
 import com.back.domain.item.item.entity.Item;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -13,6 +11,8 @@ import java.time.temporal.ChronoUnit;
 @Table(name = "item_histories") // 테이블명
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@AllArgsConstructor
+@Builder
 public class ItemHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

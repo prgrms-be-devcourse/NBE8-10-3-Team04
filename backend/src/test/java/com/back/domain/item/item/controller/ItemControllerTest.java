@@ -1,7 +1,12 @@
 package com.back.domain.item.item.controller;
 
+import com.back.domain.category.category.entity.Category;
+import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.item.item.entity.Item;
+import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.item.itemHistory.entity.ItemHistory;
+import com.back.domain.item.itemHistory.repository.ItemHistoryRepository;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -35,11 +40,43 @@ public class ItemControllerTest {
     private ItemService itemService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private ItemRepository itemRepository;
+    @Autowired
+    private ItemHistoryRepository itemHistoryRepository;
 
     private String getAuthHeader(User user) {
         return "Bearer " + user.getApiKey();
     }
 
+    @Test
+    @DisplayName("아이템 목록 조회")
+    void getItems_Success_Verification() throws Exception {
+
+        User user = userService.findById(1L).orElseThrow();
+        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+
+        itemRepository.save(new Item(
+                user, category, "비누", "https://example.com/test.jpg",
+                LocalDate.now(), "30", LocalDate.now().plusDays(30), true
+        ));
+
+        ResultActions resultActions = mvc
+                .perform(get("/api/v1/items")
+                        .header("Authorization", getAuthHeader(user)))
+                .andDo(print());
+
+        // resultCode와 데이터가 존재확인
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("아이템 목록 조회 성공"))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data").isNotEmpty())
+                .andExpect(jsonPath("$.data[0].name").exists());
+    }
     @Test
     @DisplayName("아이템 단건 조회")
     void getItem_success() throws Exception {
@@ -600,5 +637,102 @@ public class ItemControllerTest {
                 .andExpect(status().isNotFound()) // 로그 기반 수정: 400 -> 404
                 .andExpect(jsonPath("$.resultCode").value("404-1"))
                 .andExpect(jsonPath("$.msg").value("존재하지 않는 아이템이거나 권한이 없습니다."));
+    }
+    @Test
+    @DisplayName("아이템 활성화/비활성화 토글")
+    void toggleItemActive_RealData() throws Exception {
+
+        User user = userService.findById(1L).orElseThrow();
+        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+
+        Item item = itemRepository.save(new Item(
+                user, category, "토글 테스트용 칫솔", "https://example.com/img.jpg",
+                LocalDate.now(), "30", LocalDate.now().plusDays(30), true
+        ));
+
+        ResultActions resultActions = mvc
+                .perform(put("/api/v1/items/" + item.getId() + "/toggle-active")
+                        .header("Authorization", getAuthHeader(user))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print());
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.data.isActive").value(false)); // true -> false로 변했는지 검증
+    }
+
+    @Test
+    @DisplayName("카테고리별 평균 사용 기간 조회 - 실제 DB 쿼리 검증")
+    void getCategoryAverageUsage_Integration() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        // 카테고리 생성
+        Category category = categoryRepository.save(
+                Category.builder().name("욕실").build()
+        );
+
+        // 아이템 생성
+        Item item = itemRepository.save(new Item(
+                user, category, "테스트 칫솔", "https://img.example.com/test.jpg",
+                LocalDate.of(2024, 1, 1), "30", LocalDate.of(2024, 1, 31), true
+        ));
+
+        // ItemHistory 생성
+        // 기록 1: 1월 1일 ~ 1월 11일 (10일 사용)
+        itemHistoryRepository.save(ItemHistory.builder()
+                .item(item)
+                .startDate(LocalDate.of(2024, 1, 1))
+                .endDate(LocalDate.of(2024, 1, 11))
+                .build());
+
+        // 기록 2: 1월 11일 ~ 1월 31일 (20일 사용)
+        itemHistoryRepository.save(ItemHistory.builder()
+                .item(item)
+                .startDate(LocalDate.of(2024, 1, 11))
+                .endDate(LocalDate.of(2024, 1, 31))
+                .build());
+
+        // API 호출
+        ResultActions resultActions = mvc
+                .perform(get("/api/v1/items/statistics/category-average")
+                        .header("Authorization", getAuthHeader(user)))
+                .andDo(print());
+
+        // 실제 쿼리로 계산된 평균값(15.0) 검증
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.data[0].categoryName").value("욕실"))
+                .andExpect(jsonPath("$.data[0].averageUsageDays").value(15.0));
+    }
+    @Test
+    @DisplayName("가장 자주 교체한 아이템 순위 조회")
+    void getMostReplacedItems_Integration() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+
+        Item itemA = itemRepository.save(new Item(user, category, "비누", "url", LocalDate.now(), "30", LocalDate.now(), true));
+        Item itemB = itemRepository.save(new Item(user, category, "세제", "url", LocalDate.now(), "30", LocalDate.now(), true));
+
+        // 히스토리 생성 (itemA 3개, itemB 1개)
+        for(int i=0; i<3; i++) {
+            itemHistoryRepository.save(ItemHistory.builder().item(itemA).startDate(LocalDate.now()).endDate(LocalDate.now()).build());
+        }
+        itemHistoryRepository.save(ItemHistory.builder().item(itemB).startDate(LocalDate.now()).endDate(LocalDate.now()).build());
+
+
+        ResultActions resultActions = mvc
+                .perform(get("/api/v1/items/statistics/most-replaced")
+                        .header("Authorization", getAuthHeader(user))
+                        .param("limit", "10"))
+                .andDo(print());
+
+        // 검증
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].itemName").value("비누"))
+                .andExpect(jsonPath("$.data[0].replacementCount").value(3))
+                .andExpect(jsonPath("$.data[0].categoryName").value("욕실"));
     }
 }
