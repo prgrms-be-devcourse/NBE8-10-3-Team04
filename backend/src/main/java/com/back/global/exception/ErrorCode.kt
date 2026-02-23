@@ -1,12 +1,12 @@
-package com.back.global.exception;
+package com.back.global.exception
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatus
 
-@Getter
-@RequiredArgsConstructor
-public enum ErrorCode {
+enum class ErrorCode(
+    val code: String,
+    val message: String,
+    val httpStatus: HttpStatus
+) {
     // 400 Bad Request
     INVALID_INPUT_VALUE("400-1", "잘못된 입력값입니다.", HttpStatus.BAD_REQUEST),
     INVALID_REQUEST_BODY("400-1", "요청 본문이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
@@ -44,11 +44,8 @@ public enum ErrorCode {
     AI_INVALID_JSON("500", "AI 응답이 유효한 JSON 형식이 아닙니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     JSON_PARSING_ERROR("500", "JSON 파싱 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
-    private final String code;
-    private final String message;
-    private final HttpStatus httpStatus;
-
-    public String getMessageWithArgs(Object... args) {
-        return String.format(message, args);
+    // 메시지에 동적 인자가 필요한 경우 사용 (String.format 기능)
+    fun getMessageWithArgs(vararg args: Any?): String {
+        return message.format(*args)
     }
 }
