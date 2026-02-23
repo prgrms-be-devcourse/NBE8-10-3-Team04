@@ -32,9 +32,9 @@ public class ApiV1UserController {
 
         // 성공 시 로직 실행
         User user = userService.join(
-                request.loginId(),
-                request.password(),
-                request.email()
+                request.getLoginId(),
+                request.getPassword(),
+                request.getEmail()
         );
 
         return new RsData<>(
@@ -50,12 +50,12 @@ public class ApiV1UserController {
     public RsData<UserLoginResponse> login(
             @Valid @RequestBody UserLoginRequest reqBody
     ) {
-        User user = userService.findByLoginId(reqBody.loginId())
+        User user = userService.findByLoginId(reqBody.getLoginId())
                 .orElseThrow(() -> new ServiceException(ErrorCode.INVALID_LOGIN_ID));
 
         userService.checkPassword(
                 user,
-                reqBody.password()
+                reqBody.getPassword()
         );
 
         String accessToken = userService.genAccessToken(user);
@@ -133,7 +133,7 @@ public class ApiV1UserController {
             throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
-        User updatedUser = userService.updateProfile(actor.id(), request.email());
+        User updatedUser = userService.updateProfile(actor.id(), request.getEmail());
 
         // 새 토큰 발급 및 쿠키 갱신 (기존 토큰은 무효화됨)
         String newAccessToken = userService.genAccessToken(updatedUser);
@@ -159,8 +159,8 @@ public class ApiV1UserController {
 
         User updatedUser = userService.changePassword(
                 actor.id(),
-                request.currentPassword(),
-                request.newPassword()
+                request.getCurrentPassword(),
+                request.getNewPassword()
         );
 
         // 새 토큰 발급 및 쿠키 갱신 (기존 모든 토큰은 무효화됨)
@@ -188,7 +188,7 @@ public class ApiV1UserController {
         User user = userService.findById(actor.id())
                 .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
 
-        userService.checkPassword(user, request.password());
+        userService.checkPassword(user, request.getPassword());
 
         return new RsData<>(
                 "200-1",

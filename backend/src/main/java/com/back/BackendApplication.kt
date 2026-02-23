@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableScheduling
-class BackApplication
+class BackendApplication
 
 fun main(args: Array<String>) {
-    runApplication<BackApplication>(*args)
+    runApplication<BackendApplication>(*args)
 }
