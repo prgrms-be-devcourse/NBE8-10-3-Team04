@@ -80,10 +80,7 @@ class ItemServiceTest {
                 .email("test@example.com")
                 .build();
 
-        testCategory = Category.builder()
-                .id(1L)
-                .name("생활용품")
-                .build();
+        testCategory = new Category("생활용품");
 
         testItem = Item.builder()
                 .id(1L)
