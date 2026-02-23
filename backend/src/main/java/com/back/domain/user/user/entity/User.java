@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Getter
 @Builder // 빌더 패턴 사용 가능하게 함
 @AllArgsConstructor // 빌더가 모든 필드를 포함한 생성자를 사용할 수 있게 함
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -43,6 +42,14 @@ public class User {
         this.email = email;
         this.apiKey = UUID.randomUUID().toString();
     }
+
+    public Long getId() { return id; }
+    public String getLoginId() { return loginId; }
+    public String getEmail() { return email; }
+    public String getApiKey() { return apiKey; }
+    public Long getTokenVersion() { return tokenVersion; }
+    public String getPassword() { return password; }
+    public List<Item> getItems() { return items; }
 
     public void modifyApiKey(String apiKey) {
         this.apiKey = apiKey;
