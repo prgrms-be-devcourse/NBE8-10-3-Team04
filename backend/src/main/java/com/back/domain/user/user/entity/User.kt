@@ -9,7 +9,7 @@ import java.util.*
 class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,     //저장 전에는 id가 없어서 null로 지정
+    var _id: Long? = null,     //저장 전에는 id가 없어서 null로 지정
 
     @Column(unique = true)
     var loginId: String,
@@ -29,6 +29,9 @@ class User(
     //기존 private List<Item> items = new ArrayList<>(); 여서 MutableList로 사용
 
 ) {
+    val id: Long
+        get() = _id ?: error("User is not persisted yet (id is null)")
+
     protected constructor() : this(
         loginId = "",
         password = "",
@@ -36,7 +39,6 @@ class User(
     )
 
     constructor(loginId: String, password: String, email: String) : this(
-        id = null,
         loginId = loginId,
         password = password,
         email = email,

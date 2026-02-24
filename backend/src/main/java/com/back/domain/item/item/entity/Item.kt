@@ -11,7 +11,7 @@ import java.time.LocalDate
 @Table(name = "items")
 class Item(
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     var user: User?,
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -57,7 +57,7 @@ class Item(
     }
 
     fun validateOwner(actorUserId: Long?) {
-        if (this.user?.getId() != actorUserId) {
+        if (this.user?.id != actorUserId) {
             throw ServiceException("403-1", "${this.id}번 아이템에 대한 권한이 없습니다.")
         }
     }
