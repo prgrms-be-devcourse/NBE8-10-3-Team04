@@ -10,6 +10,7 @@ import com.back.global.rsData.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import org.springframework.http.MediaType
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
@@ -31,19 +32,19 @@ class ItemController (
         val userId = rq.getMemberId()
         itemService.deleteItem(userId, itemId)
 
-        return RsData("200-1", "아이템 삭제 성공")
+        return RsData("200", "아이템 삭제 성공")
     }
 
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE]) //Swagger UI에 파일선택버튼 추가
     @Operation(summary = "아이템 등록")
     fun createItem(
         @ModelAttribute @Valid request: ItemCreateRequest
-    ): RsData<ItemCreateResponse?> {
+    ): RsData<ItemCreateResponse> {
         val userId = rq.getMemberId()
         val item = itemService.createItem(userId, request)
 
         return RsData(
-            "201-1",
+            "200",
             "아이템 등록 성공",
             ItemCreateResponse.from(item)
         )
@@ -62,7 +63,7 @@ class ItemController (
         }
 
         return RsData(
-            "200-1",
+            "200",
             "아이템 목록 조회 성공",
             ItemSummaryResponse.fromList(items)
         )
@@ -75,7 +76,7 @@ class ItemController (
         val item = itemService.findByIdAndUserId(itemId, userId)
 
         return RsData(
-            "200-1",
+            "200",
             "아이템 단건 조회 성공",
             ItemResponse.from(item)
         )
@@ -84,11 +85,11 @@ class ItemController (
     @PutMapping("/{id}")
     @Operation(summary = "아이템 수정")
     fun modifyItem(
-        @PathVariable id: Long,
+        @PathVariable itemId: Long,
         @ModelAttribute @Valid request: ItemUpdateRequest
     ): RsData<ItemUpdateResponse> {
         val userId = rq.getMemberId()
-        val item = itemService.modify(userId, id, request)
+        val item = itemService.modify(userId, itemId, request)
 
         return RsData(
             "200",
@@ -99,9 +100,9 @@ class ItemController (
 
     @PutMapping("/{id}/replace")
     @Operation(summary = "아이템 교체")
-    fun replaceItem(@PathVariable id: Long): RsData<ItemReplaceResponse> {
+    fun replaceItem(@PathVariable itemId: Long): RsData<ItemReplaceResponse> {
         val userId = rq.getMemberId()
-        val item = itemService.replaceItem(userId, id)
+        val item = itemService.replaceItem(userId, itemId)
 
         return RsData(
             "200",
@@ -112,9 +113,9 @@ class ItemController (
 
     @PutMapping("/{id}/toggle-active")
     @Operation(summary = "아이템 활성화/비활성화 토글")
-    fun toggleItemActive(@PathVariable id: Long): RsData<ItemUpdateResponse> {
+    fun toggleItemActive(@PathVariable itemId: Long): RsData<ItemUpdateResponse> {
         val userId = rq.getMemberId()
-        val item = itemService.toggleActive(userId, id)
+        val item = itemService.toggleActive(userId, itemId)
 
         return RsData(
             "200",
@@ -129,7 +130,7 @@ class ItemController (
         val userId = rq.getMemberId()
         val data = itemStatisticsService.getCategoryAverageUsage(userId)
 
-        return RsData("200-1", "카테고리별 평균 사용 기간 조회 성공", data)
+        return RsData("200", "카테고리별 평균 사용 기간 조회 성공", data)
     }
 
     @GetMapping("/statistics/most-replaced")
@@ -140,7 +141,7 @@ class ItemController (
         val userId = rq.getMemberId()
         val data = itemStatisticsService.getMostReplacedItems(userId, limit)
 
-        return RsData("200-1", "가장 자주 교체한 아이템 순위 조회 성공", data)
+        return RsData("200", "가장 자주 교체한 아이템 순위 조회 성공", data)
     }
 
     // == AI 추천 ==
