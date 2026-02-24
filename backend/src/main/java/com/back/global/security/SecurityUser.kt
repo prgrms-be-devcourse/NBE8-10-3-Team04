@@ -11,5 +11,6 @@ class SecurityUser(
     authorities: Collection<GrantedAuthority>
 ) : User(loginId, password ?: "", authorities) {
 
-    fun getLoginId(): String = username
+    val loginId: String
+        get() = username
 }
