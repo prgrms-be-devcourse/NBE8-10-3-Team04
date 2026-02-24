@@ -85,7 +85,7 @@ class ItemController (
     @PutMapping("/{id}")
     @Operation(summary = "아이템 수정")
     fun modifyItem(
-        @PathVariable itemId: Long,
+        @PathVariable("id") itemId: Long,
         @ModelAttribute @Valid request: ItemUpdateRequest
     ): RsData<ItemUpdateResponse> {
         val userId = rq.getMemberId()
@@ -100,7 +100,7 @@ class ItemController (
 
     @PutMapping("/{id}/replace")
     @Operation(summary = "아이템 교체")
-    fun replaceItem(@PathVariable itemId: Long): RsData<ItemReplaceResponse> {
+    fun replaceItem(@PathVariable("id") itemId: Long): RsData<ItemReplaceResponse> {
         val userId = rq.getMemberId()
         val item = itemService.replaceItem(userId, itemId)
 
@@ -113,7 +113,7 @@ class ItemController (
 
     @PutMapping("/{id}/toggle-active")
     @Operation(summary = "아이템 활성화/비활성화 토글")
-    fun toggleItemActive(@PathVariable itemId: Long): RsData<ItemUpdateResponse> {
+    fun toggleItemActive(@PathVariable("id") itemId: Long): RsData<ItemUpdateResponse> {
         val userId = rq.getMemberId()
         val item = itemService.toggleActive(userId, itemId)
 

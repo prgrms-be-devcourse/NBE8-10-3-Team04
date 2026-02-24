@@ -72,7 +72,7 @@ public class ItemControllerTest {
         // resultCode와 데이터가 존재확인
         resultActions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("아이템 목록 조회 성공"))
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data").isNotEmpty())
@@ -97,7 +97,7 @@ public class ItemControllerTest {
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("getItem"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("아이템 단건 조회 성공"))
                 .andExpect(jsonPath("$.data.id").value(item.getId()))
                 .andExpect(jsonPath("$.data.userId").value(user.getId()))
@@ -338,7 +338,7 @@ public class ItemControllerTest {
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("createItem"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("아이템 등록 성공"))
                 .andExpect(jsonPath("$.data.id").exists())
                 .andExpect(jsonPath("$.data.categoryId").value(1))
@@ -372,7 +372,7 @@ public class ItemControllerTest {
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("createItem"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.data.cycleDays").value("6m"))
                 .andExpect(jsonPath("$.data.startDate").value("2025-01-15"))
                 .andExpect(jsonPath("$.data.nextReplacementDate").value("2025-07-15"));
@@ -400,7 +400,7 @@ public class ItemControllerTest {
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("createItem"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.data.cycleDays").value("1y"))
                 .andExpect(jsonPath("$.data.nextReplacementDate").value("2025-01-01"));
     }
@@ -570,7 +570,7 @@ public class ItemControllerTest {
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("createItem"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.data.imgUrl").isEmpty());
     }
 
@@ -592,7 +592,7 @@ public class ItemControllerTest {
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("deleteItem"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("아이템 삭제 성공"));
     }
 
@@ -703,7 +703,7 @@ public class ItemControllerTest {
         // 실제 쿼리로 계산된 평균값(15.0) 검증
         resultActions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.data[0].categoryName").value("욕실"))
                 .andExpect(jsonPath("$.data[0].averageUsageDays").value(15.0));
     }
