@@ -104,17 +104,17 @@ class ItemStatisticsServiceTest {
         // 반환된 리스트의 크기 및 각 항목의 데이터 정합성 검증
         assertThat(result).hasSize(3);
 
-        assertThat(result.get(0).categoryId()).isEqualTo(1L);
-        assertThat(result.get(0).categoryName()).isEqualTo("생활용품");
-        assertThat(result.get(0).averageUsageDays()).isEqualTo(45.5);
+        assertThat(result.get(0).categoryId).isEqualTo(1L);
+        assertThat(result.get(0).categoryName).isEqualTo("생활용품");
+        assertThat(result.get(0).averageUsageDays).isEqualTo(45.5);
 
-        assertThat(result.get(1).categoryId()).isEqualTo(2L);
-        assertThat(result.get(1).categoryName()).isEqualTo("주방용품");
-        assertThat(result.get(1).averageUsageDays()).isEqualTo(30.0);
+        assertThat(result.get(1).categoryId).isEqualTo(2L);
+        assertThat(result.get(1).categoryName).isEqualTo("주방용품");
+        assertThat(result.get(1).averageUsageDays).isEqualTo(30.0);
 
-        assertThat(result.get(2).categoryId()).isEqualTo(3L);
-        assertThat(result.get(2).categoryName()).isEqualTo("욕실용품");
-        assertThat(result.get(2).averageUsageDays()).isEqualTo(60.3);
+        assertThat(result.get(2).categoryId).isEqualTo(3L);
+        assertThat(result.get(2).categoryName).isEqualTo("욕실용품");
+        assertThat(result.get(2).averageUsageDays).isEqualTo(60.3);
 
         // 리포지토리 메서드가 정확히 1회 호출되었는지 확인
         verify(itemHistoryRepository, times(1))
@@ -158,9 +158,9 @@ class ItemStatisticsServiceTest {
 
         // 결과 리스트 크기 및 데이터 검증
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).categoryId()).isEqualTo(1L);
-        assertThat(result.get(0).categoryName()).isEqualTo("생활용품");
-        assertThat(result.get(0).averageUsageDays()).isEqualTo(50.0);
+        assertThat(result.get(0).categoryId).isEqualTo(1L);
+        assertThat(result.get(0).categoryName).isEqualTo("생활용품");
+        assertThat(result.get(0).averageUsageDays).isEqualTo(50.0);
     }
 
     @Test
@@ -183,7 +183,7 @@ class ItemStatisticsServiceTest {
 
         // null 값이 0.0으로 안전하게 처리되었는지 검증
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).averageUsageDays()).isEqualTo(0.0);
+        assertThat(result.get(0).averageUsageDays).isEqualTo(0.0);
     }
 
     @Test
@@ -219,9 +219,9 @@ class ItemStatisticsServiceTest {
 
         // 각 값이 정확히 매핑되었는지 검증
         assertThat(result).hasSize(3);
-        assertThat(result.get(0).averageUsageDays()).isEqualTo(1.0);
-        assertThat(result.get(1).averageUsageDays()).isEqualTo(365.5);
-        assertThat(result.get(2).averageUsageDays()).isEqualTo(27.89);
+        assertThat(result.get(0).averageUsageDays).isEqualTo(1.0);
+        assertThat(result.get(1).averageUsageDays).isEqualTo(365.5);
+        assertThat(result.get(2).averageUsageDays).isEqualTo(27.89);
     }
 
     // == 가장 자주 교체한 아이템 순위 조회 테스트 ==
@@ -241,19 +241,19 @@ class ItemStatisticsServiceTest {
         // 결과 크기 및 각 아이템의 상세 정보 매핑 검증
         assertThat(result).hasSize(3);
 
-        assertThat(result.get(0).itemId()).isEqualTo(1L);
-        assertThat(result.get(0).itemName()).isEqualTo("칫솔");
-        assertThat(result.get(0).categoryName()).isEqualTo("욕실용품");
-        assertThat(result.get(0).replacementCount()).isEqualTo(10L);
-        assertThat(result.get(0).imgUrl()).isEqualTo("/images/toothbrush.png");
+        assertThat(result.get(0).itemId).isEqualTo(1L);
+        assertThat(result.get(0).itemName).isEqualTo("칫솔");
+        assertThat(result.get(0).categoryName).isEqualTo("욕실용품");
+        assertThat(result.get(0).replacementCount).isEqualTo(10L);
+        assertThat(result.get(0).imgUrl).isEqualTo("/images/toothbrush.png");
 
-        assertThat(result.get(1).itemId()).isEqualTo(2L);
-        assertThat(result.get(1).itemName()).isEqualTo("수세미");
-        assertThat(result.get(1).replacementCount()).isEqualTo(8L);
+        assertThat(result.get(1).itemId).isEqualTo(2L);
+        assertThat(result.get(1).itemName).isEqualTo("수세미");
+        assertThat(result.get(1).replacementCount).isEqualTo(8L);
 
-        assertThat(result.get(2).itemId()).isEqualTo(3L);
-        assertThat(result.get(2).itemName()).isEqualTo("마스크");
-        assertThat(result.get(2).replacementCount()).isEqualTo(5L);
+        assertThat(result.get(2).itemId).isEqualTo(3L);
+        assertThat(result.get(2).itemName).isEqualTo("마스크");
+        assertThat(result.get(2).replacementCount).isEqualTo(5L);
 
         // 리포지토리 호출 시 limit 파라미터 전달 확인
         verify(itemHistoryRepository, times(1))
@@ -331,9 +331,9 @@ class ItemStatisticsServiceTest {
                 itemStatisticsService.getMostReplacedItems(testUserId, limit);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).itemId()).isEqualTo(1L);
-        assertThat(result.get(0).itemName()).isEqualTo("칫솔");
-        assertThat(result.get(0).replacementCount()).isEqualTo(15L);
+        assertThat(result.get(0).itemId).isEqualTo(1L);
+        assertThat(result.get(0).itemName).isEqualTo("칫솔");
+        assertThat(result.get(0).replacementCount).isEqualTo(15L);
     }
 
     @Test
@@ -348,8 +348,8 @@ class ItemStatisticsServiceTest {
                 itemStatisticsService.getMostReplacedItems(testUserId, limit);
 
         assertThat(result).hasSize(3);
-        assertThat(result.get(0).replacementCount()).isGreaterThanOrEqualTo(result.get(1).replacementCount());
-        assertThat(result.get(1).replacementCount()).isGreaterThanOrEqualTo(result.get(2).replacementCount());
+        assertThat(result.get(0).replacementCount).isGreaterThanOrEqualTo(result.get(1).replacementCount);
+        assertThat(result.get(1).replacementCount).isGreaterThanOrEqualTo(result.get(2).replacementCount);
     }
 
     @Test
@@ -374,7 +374,7 @@ class ItemStatisticsServiceTest {
                 itemStatisticsService.getMostReplacedItems(testUserId, limit);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).imgUrl()).isNull();
+        assertThat(result.get(0).imgUrl).isNull();
     }
 
     @Test
@@ -407,8 +407,8 @@ class ItemStatisticsServiceTest {
                 itemStatisticsService.getMostReplacedItems(testUserId, limit);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).replacementCount()).isEqualTo(5L);
-        assertThat(result.get(1).replacementCount()).isEqualTo(5L);
+        assertThat(result.get(0).replacementCount).isEqualTo(5L);
+        assertThat(result.get(1).replacementCount).isEqualTo(5L);
     }
 
     // == 다양한 사용자 ID 테스트 ==
@@ -469,8 +469,8 @@ class ItemStatisticsServiceTest {
                 itemStatisticsService.getMostReplacedItems(testUserId, limit);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).itemName()).isEqualTo("칫솔");
-        assertThat(result.get(0).replacementCount()).isEqualTo(10L);
+        assertThat(result.get(0).itemName).isEqualTo("칫솔");
+        assertThat(result.get(0).replacementCount).isEqualTo(10L);
     }
 
     @Test
@@ -495,6 +495,6 @@ class ItemStatisticsServiceTest {
                 itemStatisticsService.getMostReplacedItems(testUserId, limit);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).replacementCount()).isEqualTo(999L);
+        assertThat(result.get(0).replacementCount).isEqualTo(999L);
     }
 }

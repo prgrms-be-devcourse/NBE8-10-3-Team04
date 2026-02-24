@@ -681,18 +681,18 @@ public class ItemControllerTest {
 
         // ItemHistory 생성
         // 기록 1: 1월 1일 ~ 1월 11일 (10일 사용)
-        itemHistoryRepository.save(ItemHistory.builder()
-                .item(item)
-                .startDate(LocalDate.of(2024, 1, 1))
-                .endDate(LocalDate.of(2024, 1, 11))
-                .build());
+        itemHistoryRepository.save(new ItemHistory(
+                item,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 1, 11)
+        ));
 
         // 기록 2: 1월 11일 ~ 1월 31일 (20일 사용)
-        itemHistoryRepository.save(ItemHistory.builder()
-                .item(item)
-                .startDate(LocalDate.of(2024, 1, 11))
-                .endDate(LocalDate.of(2024, 1, 31))
-                .build());
+        itemHistoryRepository.save(new ItemHistory(
+                item,
+                LocalDate.of(2024, 1, 11),
+                LocalDate.of(2024, 1, 31)
+        ));
 
         // API 호출
         ResultActions resultActions = mvc
@@ -719,10 +719,17 @@ public class ItemControllerTest {
 
         // 히스토리 생성 (itemA 3개, itemB 1개)
         for(int i=0; i<3; i++) {
-            itemHistoryRepository.save(ItemHistory.builder().item(itemA).startDate(LocalDate.now()).endDate(LocalDate.now()).build());
+            itemHistoryRepository.save(new ItemHistory(
+                    itemA,
+                    LocalDate.now(),
+                    LocalDate.now()
+            ));
         }
-        itemHistoryRepository.save(ItemHistory.builder().item(itemB).startDate(LocalDate.now()).endDate(LocalDate.now()).build());
-
+        itemHistoryRepository.save(new ItemHistory(
+                itemB,
+                LocalDate.now(),
+                LocalDate.now()
+        ));
 
         ResultActions resultActions = mvc
                 .perform(get("/api/v1/items/statistics/most-replaced")

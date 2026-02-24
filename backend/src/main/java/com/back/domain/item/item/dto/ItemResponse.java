@@ -37,7 +37,7 @@ public record ItemResponse(
                 item.getStartDate(),
                 item.getCycleDays(),
                 item.getNextReplacementDate(),
-                item.getIsActive(),
+                item.isActive(),
                 DDayCalculator.calculate(item.getNextReplacementDate()),
                 item.getLastReplacementDate()
         );

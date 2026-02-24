@@ -1,0 +1,6 @@
+package com.back.domain.item.item.dto
+
+data class ItemCycleRecommendResponse(
+    @JvmField val cycleValue: Int,
+    @JvmField val cycleUnit: String? // "d", "m", "y"
+)
