@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
         if (ex.getErrorCode() != null) {
             log.warn("ServiceException 발생: code={}, message={}",
                     ex.getErrorCode(),
-                    rsData.msg()
+                    rsData.getMsg()
             );
         }
 

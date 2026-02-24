@@ -45,7 +45,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         } catch (ServiceException e) {
             RsData<Void> rsData = e.getRsData();
             response.setContentType("application/json;charset=UTF-8");
-            response.setStatus(rsData.statusCode());
+            response.setStatus(rsData.getStatusCode());
             response.getWriter().write(Ut.json.toString(rsData));
         }
     }
