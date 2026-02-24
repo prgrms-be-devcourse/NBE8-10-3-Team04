@@ -67,10 +67,7 @@ class DdayEmailSchedulerTest {
                 .email("user2@test.com")
                 .build();
 
-        Category category = Category.builder()
-                .id(1L)
-                .name("욕실")
-                .build();
+        Category category = new Category("욕실");
 
         Item item1 = Item.builder()
                 .id(1L)
