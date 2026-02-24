@@ -1,6 +1,7 @@
 package com.back.domain.email.scheduler;
 
 import com.back.domain.category.category.entity.Category;
+import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.email.service.EmailService;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,6 +28,9 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DdayEmailScheduler 테스트")
 class DdayEmailSchedulerTest {
+
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @Mock
     private ItemRepository itemRepository;
@@ -67,32 +72,29 @@ class DdayEmailSchedulerTest {
                 .email("user2@test.com")
                 .build();
 
-        Category category = Category.builder()
-                .id(1L)
-                .name("욕실")
-                .build();
+        Category category = categoryRepository.save(new Category("욕실"));
 
-        Item item1 = Item.builder()
-                .id(1L)
-                .user(user1)
-                .category(category)
-                .name("칫솔")
-                .startDate(LocalDate.now().minusDays(90))
-                .cycleDays("90d")
-                .nextReplacementDate(LocalDate.now())
-                .isActive(true)
-                .build();
+        Item item1 = new Item(
+                user1,
+                category,
+                "칫솔",
+                null,
+                LocalDate.now().minusDays(90),
+                "90d",
+                LocalDate.now(),
+                true
+        );
 
-        Item item2 = Item.builder()
-                .id(2L)
-                .user(user2)
-                .category(category)
-                .name("수세미")
-                .startDate(LocalDate.now().minusDays(30))
-                .cycleDays("30d")
-                .nextReplacementDate(LocalDate.now())
-                .isActive(true)
-                .build();
+        Item item2 = new Item(
+                user2,
+                category,
+                "수세미",
+                null,
+                LocalDate.now().minusDays(30),
+                "30d",
+                LocalDate.now(),
+                true
+        );
 
         given(itemRepository.findAllByNextReplacementDateAndIsActive(any(LocalDate.class), eq(true)))
                 .willReturn(List.of(item1, item2));

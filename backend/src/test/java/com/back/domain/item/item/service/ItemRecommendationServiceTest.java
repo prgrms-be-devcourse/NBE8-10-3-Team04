@@ -84,8 +84,8 @@ class ItemRecommendationServiceTest {
 
         // 결과가 null이 아니고, 주기 값과 단위가 예상값과 일치하는지 검증
         assertThat(result).isNotNull();
-        assertThat(result.cycleValue()).isEqualTo(90);
-        assertThat(result.cycleUnit()).isEqualTo("d");
+        assertThat(result.cycleValue).isEqualTo(90);
+        assertThat(result.cycleUnit).isEqualTo("d");
 
         // AI 모델 호출이 1회 발생했는지 확인
         verify(models, times(1)).generateContent(anyString(), anyString(), any());
@@ -114,8 +114,8 @@ class ItemRecommendationServiceTest {
 
         // 결과 검증
         assertThat(result).isNotNull();
-        assertThat(result.cycleValue()).isEqualTo(1);
-        assertThat(result.cycleUnit()).isEqualTo("m");
+        assertThat(result.cycleValue).isEqualTo(1);
+        assertThat(result.cycleUnit).isEqualTo("m");
     }
 
     @Test
@@ -141,8 +141,8 @@ class ItemRecommendationServiceTest {
 
         // 결과 검증
         assertThat(result).isNotNull();
-        assertThat(result.cycleValue()).isEqualTo(10);
-        assertThat(result.cycleUnit()).isEqualTo("y");
+        assertThat(result.cycleValue).isEqualTo(10);
+        assertThat(result.cycleUnit).isEqualTo("y");
     }
 
     @Test
@@ -171,8 +171,8 @@ class ItemRecommendationServiceTest {
 
         // 추출 및 파싱 결과 검증
         assertThat(result).isNotNull();
-        assertThat(result.cycleValue()).isEqualTo(90);
-        assertThat(result.cycleUnit()).isEqualTo("d");
+        assertThat(result.cycleValue).isEqualTo(90);
+        assertThat(result.cycleUnit).isEqualTo("d");
     }
 
     // == 예외 상황 테스트 ==
@@ -336,8 +336,8 @@ class ItemRecommendationServiceTest {
         // 서비스 실행 및 검증
         ItemCycleRecommendResponse result = itemRecommendationService.getItemCycleRecommend(itemName);
         assertThat(result).isNotNull();
-        assertThat(result.cycleValue()).isEqualTo(6);
-        assertThat(result.cycleUnit()).isEqualTo("m");
+        assertThat(result.cycleValue).isEqualTo(6);
+        assertThat(result.cycleUnit).isEqualTo("m");
     }
 
     @Test
@@ -361,8 +361,8 @@ class ItemRecommendationServiceTest {
         // 서비스 실행 및 검증
         ItemCycleRecommendResponse result = itemRecommendationService.getItemCycleRecommend(itemName);
         assertThat(result).isNotNull();
-        assertThat(result.cycleValue()).isEqualTo(2);
-        assertThat(result.cycleUnit()).isEqualTo("y");
+        assertThat(result.cycleValue).isEqualTo(2);
+        assertThat(result.cycleUnit).isEqualTo("y");
     }
 
     @Test
@@ -386,8 +386,8 @@ class ItemRecommendationServiceTest {
         // 서비스 실행 및 검증
         ItemCycleRecommendResponse result = itemRecommendationService.getItemCycleRecommend(itemName);
         assertThat(result).isNotNull();
-        assertThat(result.cycleValue()).isEqualTo(1);
-        assertThat(result.cycleUnit()).isEqualTo("d");
+        assertThat(result.cycleValue).isEqualTo(1);
+        assertThat(result.cycleUnit).isEqualTo("d");
     }
 
     // == 특수 케이스 테스트 ==

@@ -80,22 +80,18 @@ class ItemServiceTest {
                 .email("test@example.com")
                 .build();
 
-        testCategory = Category.builder()
-                .id(1L)
-                .name("생활용품")
-                .build();
+        testCategory = new Category("생활용품");
 
-        testItem = Item.builder()
-                .id(1L)
-                .user(testUser)
-                .category(testCategory)
-                .name("칫솔")
-                .imgUrl("/images/toothbrush.png")
-                .startDate(LocalDate.of(2024, 1, 1))
-                .cycleDays("90d") // CyclePeriod 포맷에 맞춰 "90d"로 설정
-                .nextReplacementDate(LocalDate.of(2024, 4, 1))
-                .isActive(true)
-                .build();
+        testItem = new Item(
+                testUser,
+                testCategory,
+                "칫솔",
+                "/images/toothbrush.png",
+                LocalDate.of(2024, 1, 1),
+                "90d",
+                LocalDate.of(2024, 4, 1),
+                true
+        );
 
         createRequest = new ItemCreateRequest(
                 1L,
@@ -329,18 +325,17 @@ class ItemServiceTest {
     @Test
     @DisplayName("아이템 교체 실패 - 비활성 아이템")
     void replaceItem_Failure_InactiveItem() {
-        // 비활성화된 아이템 객체 생성
-        Item inactiveItem = Item.builder()
-                .id(1L)
-                .user(testUser)
-                .category(testCategory)
-                .name("칫솔")
-                .imgUrl("/images/toothbrush.png")
-                .startDate(LocalDate.of(2024, 1, 1))
-                .cycleDays("90d")
-                .nextReplacementDate(LocalDate.of(2024, 4, 1))
-                .isActive(false)
-                .build();
+        Item inactiveItem = new Item(
+                testUser,
+                testCategory,
+                "칫솔",
+                "/images/toothbrush.png",
+                LocalDate.of(2024, 1, 1),
+                "90d",
+                LocalDate.of(2024, 4, 1),
+                false
+        );
+
 
         given(itemRepository.findByIdAndUserId(1L, 1L))
                 .willReturn(Optional.of(inactiveItem));
@@ -364,7 +359,7 @@ class ItemServiceTest {
         Item result = itemService.toggleActive(1L, 1L);
 
         // 상태 변경 검증
-        assertThat(result.getIsActive()).isFalse();
+        assertThat(result.isActive()).isFalse();
     }
 
     // == 삭제 테스트 ==

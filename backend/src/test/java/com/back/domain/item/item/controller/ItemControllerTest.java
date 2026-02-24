@@ -56,7 +56,7 @@ public class ItemControllerTest {
     void getItems_Success_Verification() throws Exception {
 
         User user = userService.findById(1L).orElseThrow();
-        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+        Category category = categoryRepository.save(new Category("욕실"));
 
         itemRepository.save(new Item(
                 user, category, "비누", "https://example.com/test.jpg",
@@ -643,7 +643,7 @@ public class ItemControllerTest {
     void toggleItemActive_RealData() throws Exception {
 
         User user = userService.findById(1L).orElseThrow();
-        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+        Category category = categoryRepository.save(new Category("욕실"));
 
         Item item = itemRepository.save(new Item(
                 user, category, "토글 테스트용 칫솔", "https://example.com/img.jpg",
@@ -668,9 +668,7 @@ public class ItemControllerTest {
         User user = userService.findById(1L).orElseThrow();
 
         // 카테고리 생성
-        Category category = categoryRepository.save(
-                Category.builder().name("욕실").build()
-        );
+        Category category = categoryRepository.save(new Category("욕실"));
 
         // 아이템 생성
         Item item = itemRepository.save(new Item(
@@ -680,18 +678,18 @@ public class ItemControllerTest {
 
         // ItemHistory 생성
         // 기록 1: 1월 1일 ~ 1월 11일 (10일 사용)
-        itemHistoryRepository.save(ItemHistory.builder()
-                .item(item)
-                .startDate(LocalDate.of(2024, 1, 1))
-                .endDate(LocalDate.of(2024, 1, 11))
-                .build());
+        itemHistoryRepository.save(new ItemHistory(
+                item,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 1, 11)
+        ));
 
         // 기록 2: 1월 11일 ~ 1월 31일 (20일 사용)
-        itemHistoryRepository.save(ItemHistory.builder()
-                .item(item)
-                .startDate(LocalDate.of(2024, 1, 11))
-                .endDate(LocalDate.of(2024, 1, 31))
-                .build());
+        itemHistoryRepository.save(new ItemHistory(
+                item,
+                LocalDate.of(2024, 1, 11),
+                LocalDate.of(2024, 1, 31)
+        ));
 
         // API 호출
         ResultActions resultActions = mvc
@@ -710,17 +708,24 @@ public class ItemControllerTest {
     @DisplayName("가장 자주 교체한 아이템 순위 조회")
     void getMostReplacedItems_Integration() throws Exception {
         User user = userService.findById(1L).orElseThrow();
-        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+        Category category = categoryRepository.save(new Category("욕실"));
 
         Item itemA = itemRepository.save(new Item(user, category, "비누", "url", LocalDate.now(), "30", LocalDate.now(), true));
         Item itemB = itemRepository.save(new Item(user, category, "세제", "url", LocalDate.now(), "30", LocalDate.now(), true));
 
         // 히스토리 생성 (itemA 3개, itemB 1개)
         for(int i=0; i<3; i++) {
-            itemHistoryRepository.save(ItemHistory.builder().item(itemA).startDate(LocalDate.now()).endDate(LocalDate.now()).build());
+            itemHistoryRepository.save(new ItemHistory(
+                    itemA,
+                    LocalDate.now(),
+                    LocalDate.now()
+            ));
         }
-        itemHistoryRepository.save(ItemHistory.builder().item(itemB).startDate(LocalDate.now()).endDate(LocalDate.now()).build());
-
+        itemHistoryRepository.save(new ItemHistory(
+                itemB,
+                LocalDate.now(),
+                LocalDate.now()
+        ));
 
         ResultActions resultActions = mvc
                 .perform(get("/api/v1/items/statistics/most-replaced")
