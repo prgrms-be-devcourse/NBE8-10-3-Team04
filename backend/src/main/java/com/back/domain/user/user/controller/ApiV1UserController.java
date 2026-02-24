@@ -79,12 +79,12 @@ public class ApiV1UserController {
             throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
-        userService.deleteById(actor.id());
+        userService.deleteById(actor.getId());
         rq.setCookie("accessToken", "");
 
         return new RsData<>(
                 "200-1",
-                "%s님의 정보입니다.".formatted(actor.loginId()),
+                "%s님의 정보입니다.".formatted(actor.getLoginId()),
                 actor
         );
     }
@@ -106,7 +106,7 @@ public class ApiV1UserController {
                 "200-1",
 //                "%s님의 정보입니다.".formatted(actor.id()),
 //                new UserDto(actor)
-                "%s님의 정보입니다.".formatted(actor.loginId()),
+                "%s님의 정보입니다.".formatted(actor.getLoginId()),
                 actor
         );
     }
@@ -133,7 +133,7 @@ public class ApiV1UserController {
             throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
-        User updatedUser = userService.updateProfile(actor.id(), request.getEmail());
+        User updatedUser = userService.updateProfile(actor.getId(), request.getEmail());
 
         // 새 토큰 발급 및 쿠키 갱신 (기존 토큰은 무효화됨)
         String newAccessToken = userService.genAccessToken(updatedUser);
@@ -158,7 +158,7 @@ public class ApiV1UserController {
         }
 
         User updatedUser = userService.changePassword(
-                actor.id(),
+                actor.getId(),
                 request.getCurrentPassword(),
                 request.getNewPassword()
         );
@@ -185,7 +185,7 @@ public class ApiV1UserController {
             throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
-        User user = userService.findById(actor.id())
+        User user = userService.findById(actor.getId())
                 .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
 
         userService.checkPassword(user, request.getPassword());
