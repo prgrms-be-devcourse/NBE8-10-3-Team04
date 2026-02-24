@@ -31,23 +31,25 @@ class CustomAuthenticationFilter(
     @Value("\${custom.jwt.secretKey}")
     private lateinit var jwtSecret: String
 
-    @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        try {
+        runCatching  {
             work(request, response, filterChain)
-        } catch (e: ServiceException) {
-            val rsData = e.rsData
-            response.contentType = "application/json;charset=UTF-8"
-            response.status = rsData.statusCode
-            response.writer.write(Ut.json.toString(rsData))
+        }.onFailure { e ->
+            if (e is ServiceException) {
+                val rsData = e.rsData
+                response.contentType = "application/json;charset=UTF-8"
+                response.status = rsData.statusCode
+                response.writer.write(Ut.json.toString(rsData))
+            } else {
+                throw e
+            }
         }
     }
 
-    @Throws(ServletException::class, IOException::class)
     private fun work(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -56,45 +58,46 @@ class CustomAuthenticationFilter(
 
         // 1) API 요청이 아닌 경우 패스
         if (!request.requestURI.startsWith("/api/")) {
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response)
             return
         }
 
         // 2) 인증/인가가 필요없는 API 요청 패스
-        if (listOf(
-                "/api/v1/user/login",
-                "/api/v1/user/signup",
-                "/api/v1/user/refresh"
-        ).contains(request.requestURI)) {
-            filterChain.doFilter(request, response);
+        val publicApis = setOf(
+            "/api/v1/user/login",
+            "/api/v1/user/signup",
+            "/api/v1/user/refresh"
+        )
+        if (request.requestURI in publicApis) {
+            filterChain.doFilter(request, response)
             return
         }
 
         // 3) apiKey, accessToken 추출
         val apiKey: String
         val accessToken: String
-        val headerAuthorization: String = rq.getHeader("Authorization", "");
+        val headerAuthorization: String = rq.getHeader("Authorization", "")
 
         // 3-1) Authorization 헤더일 때
         if (!headerAuthorization.isBlank()) {
             if (!headerAuthorization.startsWith("Bearer ")) {
                 throw ServiceException(ErrorCode.INVALID_AUTH_HEADER)
             }
-            val headerAuthorizationBits = headerAuthorization.split(" ", limit = 3);
+            val headerAuthorizationBits = headerAuthorization.split(" ", limit = 3)
 
-            apiKey = headerAuthorizationBits[1];
+            apiKey = headerAuthorizationBits[1]
             accessToken = if (headerAuthorizationBits.size == 3) headerAuthorizationBits[2] else ""
         } else {
             // 3-2) 쿠키일 때
-            apiKey = rq.getCookieValue("apiKey", "");
-            accessToken = rq.getCookieValue("accessToken", "");
+            apiKey = rq.getCookieValue("apiKey", "")
+            accessToken = rq.getCookieValue("accessToken", "")
         }
 
         // apikey, accessToken이 모두 없으면 통과 (익명 요청)
         val isApiKeyExists = apiKey.isNotBlank()
-        val isAccessTokenExists = accessToken.isNotBlank();
+        val isAccessTokenExists = accessToken.isNotBlank()
         if (!isApiKeyExists && !isAccessTokenExists) {
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response)
             return
         }
 
@@ -102,11 +105,11 @@ class CustomAuthenticationFilter(
         var user: User? = null
 
         // 4-1) accessToken 우선 검증 및 파싱
-        var isAccessTokenValid = false;
+        var isAccessTokenValid = false
         if (isAccessTokenExists) {
-            val claims: Claims? = Ut.jwt.payload(jwtSecret, accessToken);
-            if (claims != null) {
-                // 5) 토큰에서 회원 ID 추출
+            Ut.jwt.payload(jwtSecret, accessToken)?.let { claims ->
+
+                // 5) 토큰에서 회원ID 추출
                 val id = (claims["id"] as? Number)?.toLong()
                 val loginId = claims["loginId"] as? String
                 val tokenVersion = (claims["tokenVersion"] as? Number)?.toLong()
@@ -138,10 +141,10 @@ class CustomAuthenticationFilter(
 
         // accessToken이 만료되었거나 유효하지 않다면 apiKey를 통해서 재발급
         if (isAccessTokenExists && !isAccessTokenValid) {
-            val userAccessToken = userService.genAccessToken(user);
+            val userAccessToken = userService.genAccessToken(user)
 
-            rq.setCookie("accessToken", userAccessToken);
-            rq.setHeader("Authorization", userAccessToken);
+            rq.setCookie("accessToken", userAccessToken)
+            rq.setHeader("Authorization", userAccessToken)
         }
 
         // 7) accessToken이 만료되었는지 확인 (선택적 - 만료 시간 체크)
