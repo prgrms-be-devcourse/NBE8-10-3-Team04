@@ -36,7 +36,7 @@ public record ItemUpdateResponse(
                 item.getCycleDays(),
                 item.getNextReplacementDate(),
                 DDayCalculator.calculate(item.getNextReplacementDate()),
-                item.getIsActive()
+                item.isActive()
         );
     }
 }

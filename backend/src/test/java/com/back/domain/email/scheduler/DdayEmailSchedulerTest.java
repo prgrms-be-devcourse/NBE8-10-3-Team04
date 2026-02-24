@@ -69,27 +69,27 @@ class DdayEmailSchedulerTest {
 
         Category category = new Category("욕실");
 
-        Item item1 = Item.builder()
-                .id(1L)
-                .user(user1)
-                .category(category)
-                .name("칫솔")
-                .startDate(LocalDate.now().minusDays(90))
-                .cycleDays("90d")
-                .nextReplacementDate(LocalDate.now())
-                .isActive(true)
-                .build();
+        Item item1 = new Item(
+                user1,
+                category,
+                "칫솔",
+                null,
+                LocalDate.now().minusDays(90),
+                "90d",
+                LocalDate.now(),
+                true
+        );
 
-        Item item2 = Item.builder()
-                .id(2L)
-                .user(user2)
-                .category(category)
-                .name("수세미")
-                .startDate(LocalDate.now().minusDays(30))
-                .cycleDays("30d")
-                .nextReplacementDate(LocalDate.now())
-                .isActive(true)
-                .build();
+        Item item2 = new Item(
+                user2,
+                category,
+                "수세미",
+                null,
+                LocalDate.now().minusDays(30),
+                "30d",
+                LocalDate.now(),
+                true
+        );
 
         given(itemRepository.findAllByNextReplacementDateAndIsActive(any(LocalDate.class), eq(true)))
                 .willReturn(List.of(item1, item2));
