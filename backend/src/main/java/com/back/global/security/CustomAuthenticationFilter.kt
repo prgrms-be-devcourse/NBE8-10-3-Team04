@@ -27,6 +27,13 @@ class CustomAuthenticationFilter(
     @Value("\${custom.jwt.secretKey}")
     private lateinit var jwtSecret: String
 
+    companion object {
+        private val PUBLIC_APIS = setOf(
+            "/api/v1/user/login",
+            "/api/v1/user/signup",
+        )
+    }
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -37,9 +44,11 @@ class CustomAuthenticationFilter(
         }.onFailure { e ->
             if (e is ServiceException) {
                 val rsData = e.rsData
-                response.contentType = "application/json;charset=UTF-8"
-                response.status = rsData.statusCode
-                response.writer.write(Ut.json.toString(rsData))
+                response.apply {
+                    contentType = "application/json;charset=UTF-8"
+                    status = rsData.statusCode
+                    writer.write(Ut.json.toString(rsData))
+                }
             } else {
                 throw e
             }
@@ -59,12 +68,7 @@ class CustomAuthenticationFilter(
         }
 
         // 2) 인증/인가가 필요없는 API 요청 패스
-        val publicApis = setOf(
-            "/api/v1/user/login",
-            "/api/v1/user/signup",
-            "/api/v1/user/refresh"
-        )
-        if (request.requestURI in publicApis) {
+        if (request.requestURI in PUBLIC_APIS) {
             filterChain.doFilter(request, response)
             return
         }
