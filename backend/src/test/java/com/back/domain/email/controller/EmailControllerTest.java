@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -105,7 +106,7 @@ class EmailControllerTest {
     @DisplayName("테스트 D-Day 이메일 발송 - 아이템에 연결된 사용자 없음")
     void sendTestDdayEmail_userMissing() throws Exception {
         User authUser = userService.findByLoginId("user1").orElseThrow();
-        Category category = categoryRepository.findByName("집/생활").orElseThrow();
+        Category category = Objects.requireNonNull(categoryRepository.findByName("집/생활"));
 
         Item itemWithoutUser = itemRepository.save(new Item(
                 null,
@@ -132,7 +133,7 @@ class EmailControllerTest {
     @DisplayName("테스트 D-Day 이메일 발송 - 사용자 이메일 없음")
     void sendTestDdayEmail_userEmailMissing() throws Exception {
         User authUser = userService.findByLoginId("user1").orElseThrow();
-        Category category = categoryRepository.findByName("집/생활").orElseThrow();
+        Category category = Objects.requireNonNull(categoryRepository.findByName("집/생활"));
 
         User noEmailUser = userRepository.save(new User("noEmailUser", "pw", null));
         Item item = itemRepository.save(new Item(

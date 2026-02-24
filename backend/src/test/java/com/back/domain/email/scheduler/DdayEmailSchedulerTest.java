@@ -1,7 +1,6 @@
 package com.back.domain.email.scheduler;
 
 import com.back.domain.category.category.entity.Category;
-import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.email.service.EmailService;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,9 +26,6 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DdayEmailScheduler 테스트")
 class DdayEmailSchedulerTest {
-
-    @Mock
-    private CategoryRepository categoryRepository;
 
     @Mock
     private ItemRepository itemRepository;
@@ -72,7 +67,7 @@ class DdayEmailSchedulerTest {
                 .email("user2@test.com")
                 .build();
 
-        Category category = categoryRepository.save(new Category("욕실"));
+        Category category = new Category("욕실");
 
         Item item1 = new Item(
                 user1,
