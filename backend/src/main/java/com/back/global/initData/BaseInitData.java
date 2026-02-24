@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Configuration
 @RequiredArgsConstructor
@@ -74,9 +75,9 @@ public class BaseInitData {
         User user1 = userService.findByLoginId("user1").orElseThrow();
         User user2 = userService.findByLoginId("user2").orElseThrow();
 
-        Category bathroom = categoryRepository.findByName("욕실").orElseThrow();
-        Category kitchen = categoryRepository.findByName("주방").orElseThrow();
-        Category car = categoryRepository.findByName("자동차").orElseThrow();
+        Category bathroom = Objects.requireNonNull(categoryRepository.findByName("욕실"));
+        Category kitchen = Objects.requireNonNull(categoryRepository.findByName("주방"));
+        Category car = Objects.requireNonNull(categoryRepository.findByName("자동차"));
 
 
         itemService.createItem(user1.getId(), new ItemCreateRequest(

@@ -5,11 +5,10 @@ import com.back.domain.category.category.entity.Category
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import java.util.*
 
 @Repository
 interface CategoryRepository : JpaRepository<Category, Long> {
-    fun findByName(name: String): Optional<Category>
+    fun findByName(name: String): Category?
 
     @Query(
         """
