@@ -1,4 +1,4 @@
-package com.back.global.security;
+/*package com.back.global.security;
 
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.repository.UserRepository;
@@ -166,4 +166,4 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         // 10) 다음 필터로 넘김
         filterChain.doFilter(request, response);
     }
-}
+}*/
