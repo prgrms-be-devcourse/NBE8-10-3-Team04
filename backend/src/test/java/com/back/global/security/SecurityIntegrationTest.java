@@ -149,10 +149,10 @@ class SecurityIntegrationTest {
                 )
                 .andDo(print());
 
-        // Then - 토큰이 유효하지 않고 apiKey도 없으면 401-3
+        // Then - accessToken이 유효하지 않고 apiKey도 없으므로 INVALID_API_KEY(401-5) 발생
         resultActions
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-3"));
+                .andExpect(jsonPath("$.resultCode").value("401-5"));
     }
 
     // ============================================
@@ -187,11 +187,11 @@ class SecurityIntegrationTest {
     }
 
     // ============================================
-    // 테스트 7: 존재하지 않는 회원 ID로 토큰 생성 시 401
+    // 테스트 7: 존재하지 않는 회원 ID로 토큰 생성 시 404
     // ============================================
     @Test
-    @DisplayName("테스트 7: 존재하지 않는 회원 ID로 토큰 생성 시 401")
-    void t7_nonexistentUserIdReturns401() throws Exception {
+    @DisplayName("테스트 7: 존재하지 않는 회원 ID로 토큰 생성 시 404")
+    void t7_nonexistentUserIdReturns404() throws Exception {
         // Given - 존재하지 않는 회원 ID로 토큰 생성
         Map<String, Object> claims = Map.of(
                 "id", 99999L,
@@ -211,8 +211,8 @@ class SecurityIntegrationTest {
 
         // Then
         resultActions
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-1"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"));
     }
 
     // ============================================
@@ -237,10 +237,10 @@ class SecurityIntegrationTest {
                 )
                 .andDo(print());
 
-        // Then - id, loginId가 없으면 401-1 (토큰 클레임이 올바르지 않습니다)
+        // Then - id, loginId가 없으면 401-3 (INVALID_TOKEN_CLAIM)
         resultActions
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-1"));
+                .andExpect(jsonPath("$.resultCode").value("401-3"));
     }
 
     // ============================================
