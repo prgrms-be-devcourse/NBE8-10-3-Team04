@@ -276,7 +276,7 @@ public class ItemService {
         if (image != null && !image.isEmpty()) {
             try {
                 return s3ImageService.upload(image);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new ServiceException(ErrorCode.IMAGE_UPLOAD_FAILED);
             }
         }
