@@ -6,9 +6,7 @@ import com.back.domain.user.user.service.UserService
 import com.back.global.exception.*
 import com.back.global.rq.Rq
 import com.back.standard.util.Ut
-import io.jsonwebtoken.Claims
 import jakarta.servlet.FilterChain
-import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
@@ -17,8 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
-import java.io.IOException
-
 
 
 @Component
