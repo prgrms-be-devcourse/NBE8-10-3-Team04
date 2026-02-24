@@ -2,6 +2,7 @@ package com.back.domain.email.service
 
 import com.back.domain.email.dto.ReplacementEmailContent
 import com.back.domain.item.item.entity.Item
+import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -34,6 +35,8 @@ class EmailService (
 
             javaMailSender.send(mimeMessage)
             recipientEmail
-        }.getOrElse { e ->
-            throw ServiceException("500-1", "메일 발송 실패: ${e.message}")}
+        }.fold(
+            onSuccess = { it },
+            onFailure = { throw ServiceException(ErrorCode.EMAIL_SEND_FAILED) }
+        )
 }
