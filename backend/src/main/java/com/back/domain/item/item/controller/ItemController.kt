@@ -29,7 +29,7 @@ class ItemController (
     @DeleteMapping("/{itemId}")
     @Operation(summary = "아이템 삭제")
     fun deleteItem(@PathVariable itemId: Long): RsData<Void> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         itemService.deleteItem(userId, itemId)
 
         return RsData("200", "아이템 삭제 성공")
@@ -40,7 +40,7 @@ class ItemController (
     fun createItem(
         @ModelAttribute @Valid request: ItemCreateRequest
     ): RsData<ItemCreateResponse> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val item = itemService.createItem(userId, request)
 
         return RsData(
@@ -55,7 +55,7 @@ class ItemController (
     fun getItems(
         @RequestParam(required = false) categoryId: Long?
     ): RsData<List<ItemSummaryResponse>> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val items = if (categoryId != null) {
             itemService.findAllByUserIdAndCategoryId(userId, categoryId)
         } else {
@@ -72,7 +72,7 @@ class ItemController (
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
     fun getItem(@PathVariable itemId: Long): RsData<ItemResponse> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val item = itemService.findByIdAndUserId(itemId, userId)
 
         return RsData(
@@ -88,7 +88,7 @@ class ItemController (
         @PathVariable("id") itemId: Long,
         @ModelAttribute @Valid request: ItemUpdateRequest
     ): RsData<ItemUpdateResponse> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val item = itemService.modify(userId, itemId, request)
 
         return RsData(
@@ -101,7 +101,7 @@ class ItemController (
     @PutMapping("/{id}/replace")
     @Operation(summary = "아이템 교체")
     fun replaceItem(@PathVariable("id") itemId: Long): RsData<ItemReplaceResponse> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val item = itemService.replaceItem(userId, itemId)
 
         return RsData(
@@ -114,7 +114,7 @@ class ItemController (
     @PutMapping("/{id}/toggle-active")
     @Operation(summary = "아이템 활성화/비활성화 토글")
     fun toggleItemActive(@PathVariable("id") itemId: Long): RsData<ItemUpdateResponse> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val item = itemService.toggleActive(userId, itemId)
 
         return RsData(
@@ -127,7 +127,7 @@ class ItemController (
     @GetMapping("/statistics/category-average")
     @Operation(summary = "카테고리별 평균 사용 기간 조회")
     fun getCategoryAverageUsage(): RsData<List<CategoryAverageUsageResponse>> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val data = itemStatisticsService.getCategoryAverageUsage(userId)
 
         return RsData("200", "카테고리별 평균 사용 기간 조회 성공", data)
@@ -138,7 +138,7 @@ class ItemController (
     fun getMostReplacedItems(
         @RequestParam(defaultValue = "10") limit: Int
     ): RsData<List<MostReplacedItemResponse>> {
-        val userId = rq.getMemberId()
+        val userId = rq.memberId
         val data = itemStatisticsService.getMostReplacedItems(userId, limit)
 
         return RsData("200", "가장 자주 교체한 아이템 순위 조회 성공", data)
