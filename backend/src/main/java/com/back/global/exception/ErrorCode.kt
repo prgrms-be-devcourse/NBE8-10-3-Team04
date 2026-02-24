@@ -17,6 +17,10 @@ enum class ErrorCode(
     LOGIN_REQUIRED("401-1", "로그인이 필요합니다.", HttpStatus.UNAUTHORIZED),
     INVALID_LOGIN_ID("401-1", "존재하지 않는 아이디입니다.", HttpStatus.UNAUTHORIZED),
     INVALID_PASSWORD("401-1", "비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED),
+    INVALID_AUTH_HEADER("401-2", "Authorization 헤더가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED),
+    INVALID_TOKEN_CLAIM("401-3", "토큰 클레임이 올바르지 않습니다.", HttpStatus.UNAUTHORIZED),
+    TOKEN_EXPIRED("401-4", "토큰이 만료되었습니다. 다시 로그인해주세요.", HttpStatus.UNAUTHORIZED),
+    INVALID_API_KEY("401-5", "API 키가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED),
 
     // 403 Forbidden
     PASSWORD_MISMATCH("403-1", "현재 비밀번호가 일치하지 않습니다.", HttpStatus.FORBIDDEN),

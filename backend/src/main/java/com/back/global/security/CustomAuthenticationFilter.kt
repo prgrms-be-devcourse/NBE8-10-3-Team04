@@ -3,7 +3,7 @@ package com.back.global.security;
 import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.repository.UserRepository
 import com.back.domain.user.user.service.UserService
-import com.back.global.exception.ServiceException
+import com.back.global.exception.*
 import com.back.global.rq.Rq
 import com.back.standard.util.Ut
 import io.jsonwebtoken.Claims
@@ -78,7 +78,7 @@ class CustomAuthenticationFilter(
         // 3-1) Authorization 헤더일 때
         if (!headerAuthorization.isBlank()) {
             if (!headerAuthorization.startsWith("Bearer ")) {
-                throw ServiceException("401-2", "Authorization 헤더가 Bearer 형식이 아닙니다.");
+                throw ServiceException(ErrorCode.INVALID_AUTH_HEADER)
             }
             val headerAuthorizationBits = headerAuthorization.split(" ", limit = 3);
 
@@ -113,16 +113,17 @@ class CustomAuthenticationFilter(
 
                 // 클레임 유효성 검사
                 if (id == null || loginId == null) {
-                    throw ServiceException("401-1", "토큰 클레임이 올바르지 않습니다.")
+                    throw ServiceException(ErrorCode.INVALID_TOKEN_CLAIM)
                 }
 
                 // DB에서 실제 회원 조회
                 user = userRepository.findById(id)
-                    .orElseThrow { ServiceException("401-1", "존재하지 않는 회원입니다.") }
+                    .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
+
 
                 // tokenVersion 검증 - DB의 버전과 토큰의 버전이 다르면 토큰 무효화
                 if (tokenVersion == null || tokenVersion != user.tokenVersion) {
-                    throw ServiceException("401-4", "토큰이 만료되었습니다. 다시 로그인해주세요.")
+                    throw ServiceException(ErrorCode.TOKEN_EXPIRED)
                 }
 
                 isAccessTokenValid = true
@@ -132,7 +133,7 @@ class CustomAuthenticationFilter(
         // 4-2) accessToken이 없으면 apiKey 탐색
         if (user == null) {
             user = userService.findByApiKey(apiKey)
-                .orElseThrow { ServiceException("401-3", "API 키가 유효하지 않습니다.") }
+                .orElseThrow { ServiceException(ErrorCode.INVALID_API_KEY) }
         }
 
         // accessToken이 만료되었거나 유효하지 않다면 apiKey를 통해서 재발급
