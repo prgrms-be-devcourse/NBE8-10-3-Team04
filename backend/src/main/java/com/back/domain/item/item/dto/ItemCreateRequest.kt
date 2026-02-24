@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDate
 
-@JvmRecord
 data class ItemCreateRequest(
     @field:NotNull
     @JvmField val categoryId: Long?,

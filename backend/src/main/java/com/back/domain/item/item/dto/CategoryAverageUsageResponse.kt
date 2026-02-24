@@ -1,6 +1,5 @@
 package com.back.domain.item.item.dto
 
-@JvmRecord
 data class CategoryAverageUsageResponse(
     @JvmField val categoryId: Long?,
     @JvmField val categoryName: String?,

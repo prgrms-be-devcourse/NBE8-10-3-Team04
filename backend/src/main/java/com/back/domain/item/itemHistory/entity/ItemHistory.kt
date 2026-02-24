@@ -12,7 +12,7 @@ import kotlin.math.max
 class ItemHistory(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null, // 주 생성자에는 id가 있지만 기본값은 null
+    val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     var item: Item?,
@@ -22,19 +22,17 @@ class ItemHistory(
     var endDate: LocalDate? = null
 ) {
     constructor() : this(null, null, null, null)
-    // 💡 1. 자바 테스트용: id 없이 item, startDate, endDate만 받는 생성자
     constructor(item: Item, startDate: LocalDate?, endDate: LocalDate?) : this(
-        id = null, // 내부적으로 id는 null로 세팅해 줌
+        id = null,
         item = item,
         startDate = startDate,
         endDate = endDate
     )
 
-    // 💡 2. 기존 코드 유지: Item만 받는 생성자
     constructor(item: Item) : this(
         id = null,
         item = item,
-        startDate = item.startDate, // Item이 자바 클래스면 내부적으로 getStartDate() 호출
+        startDate = item.startDate,
         endDate = null
     )
 
@@ -42,7 +40,6 @@ class ItemHistory(
         this.endDate = endDate
     }
 
-    // 메서드 대신 코틀린 프로퍼티(Getter) 방식 사용
     val usedDays: Long?
         get() {
             if (endDate == null || startDate == null) return null

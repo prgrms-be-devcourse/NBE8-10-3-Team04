@@ -4,13 +4,12 @@ import com.back.domain.item.item.entity.Item
 import com.back.domain.item.item.util.DDayCalculator
 import java.time.LocalDate
 
-@JvmRecord
 data class ItemCreateResponse(
-    val id: Long?,
-    val userId: Long?,
+    val id: Long,
+    val userId: Long,
     val categoryId: Long?,
     val categoryName: String?,
-    val name: String?,
+    val name: String,
     val imgUrl: String?,
     val startDate: LocalDate?,
     val cycleDays: String?,
@@ -28,11 +27,11 @@ data class ItemCreateResponse(
         @JvmStatic
         fun from(item: Item): ItemCreateResponse {
             return ItemCreateResponse(
-                id = item.id,
-                userId = item.user?.id,
+                id = item.id!!,
+                userId = item.user!!.id!!,
                 categoryId = item.category?.id,
                 categoryName = item.category?.name,
-                name = item.name,
+                name = item.name ?: "",
                 imgUrl = item.imgUrl,
                 startDate = item.startDate,
                 cycleDays = item.cycleDays,
