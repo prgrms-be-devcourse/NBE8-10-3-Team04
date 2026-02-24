@@ -5,7 +5,7 @@ import com.back.domain.item.item.util.DDayCalculator;
 
 import java.time.LocalDate;
 
-public record ItemUpdateResponse(
+public record ItemCreateResponse(
         Long id,
         Long userId,
         Long categoryId,
@@ -19,13 +19,13 @@ public record ItemUpdateResponse(
         Boolean isActive
 ) {
     /**
-     * 수정된 Item Entity를 Response DTO로 변환
+     * 생성된 Item Entity를 Response DTO로 변환
      *
-     * @param item 수정된 Item 엔티티
-     * @return ItemUpdateResponse DTO
+     * @param item 생성된 Item 엔티티
+     * @return ItemCreateResponse DTO
      */
-    public static ItemUpdateResponse from(Item item) {
-        return new ItemUpdateResponse(
+    public static ItemCreateResponse from(Item item) {
+        return new ItemCreateResponse(
                 item.getId(),
                 item.getUser().getId(),
                 item.getCategory() == null ? null : item.getCategory().getId(),

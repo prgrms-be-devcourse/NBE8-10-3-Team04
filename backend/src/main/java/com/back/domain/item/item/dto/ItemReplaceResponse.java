@@ -5,7 +5,7 @@ import com.back.domain.item.item.util.DDayCalculator;
 
 import java.time.LocalDate;
 
-public record ItemUpdateResponse(
+public record ItemReplaceResponse(
         Long id,
         Long userId,
         Long categoryId,
@@ -15,17 +15,16 @@ public record ItemUpdateResponse(
         LocalDate startDate,
         String cycleDays,
         LocalDate nextReplacementDate,
-        Long dDay,
-        Boolean isActive
+        Long dDay
 ) {
     /**
-     * 수정된 Item Entity를 Response DTO로 변환
+     * 교체된 Item Entity를 Response DTO로 변환
      *
-     * @param item 수정된 Item 엔티티
-     * @return ItemUpdateResponse DTO
+     * @param item 교체된 Item 엔티티
+     * @return ItemReplaceResponse DTO
      */
-    public static ItemUpdateResponse from(Item item) {
-        return new ItemUpdateResponse(
+    public static ItemReplaceResponse from(Item item) {
+        return new ItemReplaceResponse(
                 item.getId(),
                 item.getUser().getId(),
                 item.getCategory() == null ? null : item.getCategory().getId(),
@@ -35,8 +34,7 @@ public record ItemUpdateResponse(
                 item.getStartDate(),
                 item.getCycleDays(),
                 item.getNextReplacementDate(),
-                DDayCalculator.calculate(item.getNextReplacementDate()),
-                item.getIsActive()
+                DDayCalculator.calculate(item.getNextReplacementDate())
         );
     }
 }

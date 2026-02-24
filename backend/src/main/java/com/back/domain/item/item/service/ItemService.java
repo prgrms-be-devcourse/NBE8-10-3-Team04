@@ -139,22 +139,22 @@ public class ItemService {
     // 아이템 생성 (외부용)
     @Transactional
     public Item createItem(Long userId, ItemCreateRequest request) {
-        Category category = findCategoryOrThrow(request.categoryId);
+        Category category = findCategoryOrThrow(request.categoryId());
 
         LocalDate startDate = request.resolvedStartDate();
-        CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays);
+        CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
         LocalDate nextReplacementDate = cyclePeriod.addTo(startDate);
 
 
-        String finalImgUrl = resolveImageUrl(request.image, request.imgUrl, null);
+        String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), null);
 
         Item item = create(
                 userId,
                 category,
-                request.name,
+                request.name(),
                 finalImgUrl,
                 startDate,
-                request.cycleDays,
+                request.cycleDays(),
                 nextReplacementDate,
                 true
         );
@@ -171,9 +171,9 @@ public class ItemService {
     @Transactional
     public Item modify(Long userId, Long itemId, ItemUpdateRequest request) {
         Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
-        Category category = findCategoryOrThrow(request.categoryId); // 메서드 재사용
+        Category category = findCategoryOrThrow(request.categoryId()); // 메서드 재사용
 
-        String finalImgUrl = resolveImageUrl(request.image, request.imgUrl, item.getImgUrl()); // 중복 제거
+        String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), item.getImgUrl()); // 중복 제거
 
         // // 기존 이미지 파일이 동일하지 않으면 삭제
         if (!Objects.equals(finalImgUrl, item.getImgUrl())) {
@@ -182,13 +182,13 @@ public class ItemService {
 
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
         LocalDate nextReplacementDate = item.getNextReplacementDate();
-        if (!Objects.equals(request.cycleDays, item.getCycleDays())) {
-            CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays);
+        if (!Objects.equals(request.cycleDays(), item.getCycleDays())) {
+            CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
             nextReplacementDate = cyclePeriod.addTo(item.getStartDate());
         }
 
-        item.modify(category, request.name, finalImgUrl, request.cycleDays, nextReplacementDate,
-                request.isActive);
+        item.modify(category, request.name(), finalImgUrl, request.cycleDays(), nextReplacementDate,
+                request.isActive());
 
         return item;
     }
@@ -211,7 +211,7 @@ public class ItemService {
         Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
 
         // 비활성 아이템은 교체 불가
-        if (!item.isActive()) {
+        if (!item.getIsActive()) {
             throw new ServiceException(ErrorCode.INACTIVE_ITEM_CANNOT_REPLACE);
         }
 

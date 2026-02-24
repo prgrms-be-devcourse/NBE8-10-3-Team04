@@ -31,7 +31,7 @@ public record ItemSummaryResponse(
                 item.getLastReplacementDate(),
                 item.getImgUrl(),
                 DDayCalculator.calculate(item.getNextReplacementDate()),
-                item.isActive()
+                item.getIsActive()
         );
     }
 
