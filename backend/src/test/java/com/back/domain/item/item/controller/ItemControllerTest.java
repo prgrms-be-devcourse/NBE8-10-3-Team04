@@ -56,7 +56,8 @@ public class ItemControllerTest {
     void getItems_Success_Verification() throws Exception {
 
         User user = userService.findById(1L).orElseThrow();
-        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+        // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
+        Category category = categoryRepository.save(new Category("욕실"));
 
         itemRepository.save(new Item(
                 user, category, "비누", "https://example.com/test.jpg",
@@ -643,7 +644,8 @@ public class ItemControllerTest {
     void toggleItemActive_RealData() throws Exception {
 
         User user = userService.findById(1L).orElseThrow();
-        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+        // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
+        Category category = categoryRepository.save(new Category("욕실"));
 
         Item item = itemRepository.save(new Item(
                 user, category, "토글 테스트용 칫솔", "https://example.com/img.jpg",
@@ -668,9 +670,8 @@ public class ItemControllerTest {
         User user = userService.findById(1L).orElseThrow();
 
         // 카테고리 생성
-        Category category = categoryRepository.save(
-                Category.builder().name("욕실").build()
-        );
+        // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
+        Category category = categoryRepository.save(new Category("욕실"));
 
         // 아이템 생성
         Item item = itemRepository.save(new Item(
@@ -710,7 +711,8 @@ public class ItemControllerTest {
     @DisplayName("가장 자주 교체한 아이템 순위 조회")
     void getMostReplacedItems_Integration() throws Exception {
         User user = userService.findById(1L).orElseThrow();
-        Category category = categoryRepository.save(Category.builder().name("욕실").build());
+        // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
+        Category category = categoryRepository.save(new Category("욕실"));
 
         Item itemA = itemRepository.save(new Item(user, category, "비누", "url", LocalDate.now(), "30", LocalDate.now(), true));
         Item itemB = itemRepository.save(new Item(user, category, "세제", "url", LocalDate.now(), "30", LocalDate.now(), true));
