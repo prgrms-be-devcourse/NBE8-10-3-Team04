@@ -76,6 +76,10 @@ configurations {
     }
 }
 
+val mockitoAgent by configurations.creating {
+    isTransitive = false
+}
+
 repositories {
     mavenCentral()
 }
@@ -138,6 +142,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    mockitoAgent("org.mockito:mockito-core:5.20.0")
 }
 
 kotlin {
@@ -154,4 +159,5 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    jvmArgs("-javaagent:${mockitoAgent.singleFile.absolutePath}")
 }
