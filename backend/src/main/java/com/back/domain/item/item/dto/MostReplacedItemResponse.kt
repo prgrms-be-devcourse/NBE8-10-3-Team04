@@ -2,10 +2,10 @@ package com.back.domain.item.item.dto
 
 
 data class MostReplacedItemResponse(
-    @JvmField val itemId: Long?,
-    @JvmField val itemName: String?,
-    @JvmField val categoryName: String?,
-    @JvmField val replacementCount: Long?,
+    @JvmField val itemId: Long,
+    @JvmField val itemName: String,
+    @JvmField val categoryName: String,
+    @JvmField val replacementCount: Long,
     @JvmField val imgUrl: String?
 ) {
     companion object {
@@ -18,10 +18,10 @@ data class MostReplacedItemResponse(
         @JvmStatic
         fun from(result: Map<String, Any?>): MostReplacedItemResponse {
             return MostReplacedItemResponse(
-                itemId = (result["itemId"] as? Number)?.toLong(),
-                itemName = result["itemName"] as? String,
-                categoryName = result["categoryName"] as? String,
-                replacementCount = (result["replacementCount"] as? Number)?.toLong(),
+                itemId = (result["itemId"] as Number).toLong(),
+                itemName = result["itemName"] as String,
+                categoryName = result["categoryName"] as String,
+                replacementCount = (result["replacementCount"] as Number).toLong(),
                 imgUrl = result["imgUrl"] as? String
             )
         }
@@ -34,7 +34,7 @@ data class MostReplacedItemResponse(
          */
         @JvmStatic
         fun fromList(results: List<Map<String, Any?>>): List<MostReplacedItemResponse> {
-            return results.map { from(it) }
+            return results.map(::from)
         }
     }
 }
