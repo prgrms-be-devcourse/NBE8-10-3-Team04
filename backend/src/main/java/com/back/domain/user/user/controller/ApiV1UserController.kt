@@ -21,7 +21,6 @@ class ApiV1UserController(
 ) {
 
     @PostMapping("/signup")
-    @Transactional
     @Operation(summary = "회원가입")
     fun join(@Valid @RequestBody request: UserJoinRequest): RsData<UserDto> {
         // BindingResult 제거 - GlobalExceptionHandler가 자동으로 처리
@@ -42,7 +41,6 @@ class ApiV1UserController(
     }
 
     @PostMapping("/login")
-    @Transactional(readOnly = true)
     @Operation(summary = "로그인")
     fun login(
         @Valid @RequestBody reqBody: UserLoginRequest
