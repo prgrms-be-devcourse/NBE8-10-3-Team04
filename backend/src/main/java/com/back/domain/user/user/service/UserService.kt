@@ -1,6 +1,5 @@
 package com.back.domain.user.user.service
 
-import com.back.domain.item.item.entity.Item
 import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.repository.UserRepository
 import com.back.global.exception.ErrorCode
@@ -13,10 +12,8 @@ import lombok.RequiredArgsConstructor
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.*
-import java.util.function.Supplier
 
 @Service
-@RequiredArgsConstructor
 class UserService(
     private val authTokenService: AuthTokenService,
     private val userRepository: UserRepository,
@@ -45,8 +42,7 @@ class UserService(
             .orElseThrow{ ServiceException(ErrorCode.USER_NOT_FOUND) }
 
         val imageUrls = user.items
-            .mapNotNull { it.imgUrl }
-            .filter { it.isNotBlank() }
+            .mapNotNull { it.imgUrl?.takeIf(String::isNotBlank) }
 
         // API 요청 횟수 감소를 위해 S3 다중 삭제 사용
         if (imageUrls.isNotEmpty()) {
@@ -65,8 +61,7 @@ class UserService(
 
     fun genAccessToken(user: User): String = authTokenService.genAccessToken(user)
 
-
-    fun findById(id: Long)= userRepository.findById(id)
+    fun findById(id: Long) = userRepository.findById(id)
 
     /**
      * 프로필(이메일) 수정
@@ -79,7 +74,7 @@ class UserService(
         @NotBlank @Size(min = 2, max = 30) email: String
     ): User {
         val user = userRepository.findById(id)
-            .orElseThrow{ServiceException(ErrorCode.USER_NOT_FOUND) }
+            .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
 
         user.modifyUser(email, user.password)
 
@@ -103,7 +98,7 @@ class UserService(
         @NotBlank @Size(min = 2, max = 30) newPassword: String
     ): User {
         val user = userRepository.findById(id)
-            .orElseThrow{ ServiceException(ErrorCode.USER_NOT_FOUND) }
+            .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
 
         if (!passwordEncoder.matches(currentPassword, user.password)) {
             throw ServiceException(ErrorCode.PASSWORD_MISMATCH)
