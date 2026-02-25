@@ -1,30 +1,19 @@
-package com.back.domain.email.dto;
+package com.back.domain.email.dto
 
-import com.back.domain.item.item.entity.Item;
-import lombok.Builder;
-import lombok.Getter;
+import com.back.domain.item.item.entity.Item
+import java.time.LocalDate
 
-import java.time.LocalDate;
+data class ReplacementEmailContent(
+    val itemName: String?, //TODO: Item이 Kotlin 프로퍼티가 아니라서 null 허용, Item이 Kotlin으로 리팩토링되면 null 허용 제거
+    val startDate: LocalDate?,
+    val cycleDays: String?,
+    val nextReplacementDate: LocalDate?
+) {
 
-@Getter
-@Builder
-public class ReplacementEmailContent {
-    private String itemName;
-    private LocalDate startDate;
-    private String cycleDays;
-    private LocalDate nextReplacementDate;
-
-    public static ReplacementEmailContent from(Item item) {
-        return ReplacementEmailContent.builder()
-                .itemName(item.getName())
-                .startDate(item.getStartDate())
-                .cycleDays(item.getCycleDays())
-                .nextReplacementDate(item.getNextReplacementDate())
-                .build();
-    }
-
-    public String toHtmlContent() {
-        return String.format("""
+    // TODO: Item 도메인 Kotlin 전환 후 nullability 정리와 함께 String.format -> 문자열 템플릿으로 전환
+    fun toHtmlContent(): String {
+        return String.format(
+            """
                         <!DOCTYPE html>
                         <html>
                         <head>
@@ -65,15 +54,23 @@ public class ReplacementEmailContent {
                             </div>
                         </body>
                         </html>
-                        """,
-                itemName,
-                startDate,
-                cycleDays,
-                nextReplacementDate
-        );
+                        
+                        """.trimIndent(),
+            itemName,
+            startDate,
+            cycleDays,
+            nextReplacementDate
+        )
     }
 
-    public String getEmailSubject() {
-        return "[교체 알림] " + itemName + " 교체 시기입니다!";
+    companion object {
+        fun from(item: Item): ReplacementEmailContent {
+            return ReplacementEmailContent(
+                itemName = item.name,
+                startDate = item.startDate,
+                cycleDays = item.cycleDays,
+                nextReplacementDate = item.nextReplacementDate
+            )
+        }
     }
 }
