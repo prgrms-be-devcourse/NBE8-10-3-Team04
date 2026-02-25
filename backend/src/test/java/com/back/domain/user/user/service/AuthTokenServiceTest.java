@@ -40,7 +40,7 @@ class AuthTokenServiceTest {
     @DisplayName("genAccessToken(): 생성된 토큰의 페이로드가 정상적으로 파싱")
     void genAccessToken_verify_payload() {
         User user = new User("testUser", "encodedPassword", "test@example.com");
-        ReflectionTestUtils.setField(user, "id", 123L);
+        ReflectionTestUtils.setField(user, "_id", 123L);
 
         String accessToken = authTokenService.genAccessToken(user);
         Map<String, Object> payload = authTokenService.payload(accessToken);
@@ -59,7 +59,7 @@ class AuthTokenServiceTest {
         String expectedLoginId = "payloadTestUser";
 
         User user = new User(expectedLoginId, "password123", "payload@test.com");
-        ReflectionTestUtils.setField(user, "id", expectedId);
+        ReflectionTestUtils.setField(user, "_id", expectedId);
 
         user.increaseTokenVersion();
         user.increaseTokenVersion();
@@ -119,7 +119,7 @@ class AuthTokenServiceTest {
     @DisplayName("payload(): 숫자 타입(ID, Version)은 Long 값으로 정확히 비교")
     void payload_handles_number_types_correctly() {
         User user = new User("numberTestUser", "password", "number@test.com");
-        ReflectionTestUtils.setField(user, "id", 999999999L);
+        ReflectionTestUtils.setField(user, "_id", 999999999L);
 
         for (int i = 0; i < 5; i++) user.increaseTokenVersion();
 
@@ -141,8 +141,8 @@ class AuthTokenServiceTest {
     void integration_multiple_users() {
         User user1 = new User("u1", "p1", "u1@test.com");
         User user2 = new User("u2", "p2", "u2@test.com");
-        ReflectionTestUtils.setField(user1, "id", 100L);
-        ReflectionTestUtils.setField(user2, "id", 200L);
+        ReflectionTestUtils.setField(user1, "_id", 100L);
+        ReflectionTestUtils.setField(user2, "_id", 200L);
 
         String token1 = authTokenService.genAccessToken(user1);
         String token2 = authTokenService.genAccessToken(user2);

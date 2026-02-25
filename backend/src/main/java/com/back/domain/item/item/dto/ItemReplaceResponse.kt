@@ -27,7 +27,7 @@ data class ItemReplaceResponse(
         fun from(item: Item): ItemReplaceResponse {
             return ItemReplaceResponse(
                 id = item.id!!,
-                item.user!!.getId(),
+                item.user!!.id,
                 if (item.category == null) null else item.category!!.id,
                 if (item.category == null) null else item.category!!.name,
                 name = item.name ?: "",

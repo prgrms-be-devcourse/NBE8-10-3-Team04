@@ -19,9 +19,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DdayEmailScheduler 테스트")
@@ -55,17 +53,11 @@ class DdayEmailSchedulerTest {
     @Test
     @DisplayName("오늘 교체 대상 아이템이 있으면 사용자 이메일로 발송한다")
     void checkAndSendDdayEmails_sendNotifications() {
-        User user1 = User.builder()
-                .id(1L)
-                .loginId("user1")
-                .email("user1@test.com")
-                .build();
+        User user1 = mock(User.class);
+        when(user1.getEmail()).thenReturn("user1@test.com");
 
-        User user2 = User.builder()
-                .id(2L)
-                .loginId("user2")
-                .email("user2@test.com")
-                .build();
+        User user2 = mock(User.class);
+        when(user2.getEmail()).thenReturn("user2@test.com");
 
         Category category = new Category("욕실");
 
