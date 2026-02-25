@@ -61,7 +61,8 @@ class UserService(
 
     fun genAccessToken(user: User): String = authTokenService.genAccessToken(user)
 
-    fun findById(id: Long) = userRepository.findById(id)
+    fun findById(id: Long): User? =
+        userRepository.findById(id).orElse(null)
 
     /**
      * 프로필(이메일) 수정
