@@ -7,8 +7,7 @@ import java.util.*
 
 @Repository
 interface UserRepository : JpaRepository<User, Long> {
-    //Optional은 Service 변경하면서 수정할 예정
-    fun findByLoginId(loginId: String): Optional<User>
+    fun findByLoginId(loginId: String): User?
 
-    fun findByApiKey(apiKey: String): Optional<User>
+    fun findByApiKey(apiKey: String): User?
 }

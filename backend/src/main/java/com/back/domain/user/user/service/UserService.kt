@@ -24,7 +24,7 @@ class UserService(
     fun count(): Long = userRepository.count()
 
     fun join(loginId: String, password: String, email: String): User {
-        userRepository.findByLoginId(loginId).ifPresent {
+        if (userRepository.findByLoginId(loginId) != null) {
             throw ServiceException(ErrorCode.DUPLICATE_LOGIN_ID)
         }
 
