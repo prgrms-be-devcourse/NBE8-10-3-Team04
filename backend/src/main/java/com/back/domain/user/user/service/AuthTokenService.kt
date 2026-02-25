@@ -13,8 +13,8 @@ class AuthTokenService(
     @Value("\${custom.accessToken.expirationSeconds}")
     private val accessTokenExpirationSeconds: Int
 ) {
-    fun genAccessToken(user: User): String {
-        return Ut.jwt.toString(
+    fun genAccessToken(user: User) =
+        Ut.jwt.toString(
             jwtSecretKey,
             accessTokenExpirationSeconds,
             mapOf(
@@ -24,7 +24,6 @@ class AuthTokenService(
                 "tokenVersion" to user.tokenVersion
             )
         )
-    }
 
     fun payload(accessToken: String): Map<String, Any>? {
         val parsedPayload = Ut.jwt.payload(jwtSecretKey, accessToken)
