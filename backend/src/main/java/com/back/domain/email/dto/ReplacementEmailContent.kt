@@ -10,6 +10,7 @@ data class ReplacementEmailContent(
     val nextReplacementDate: LocalDate?
 ) {
 
+    // TODO: Item 도메인 Kotlin 전환 후 nullability 정리와 함께 String.format -> 문자열 템플릿으로 전환
     fun toHtmlContent(): String {
         return String.format(
             """
