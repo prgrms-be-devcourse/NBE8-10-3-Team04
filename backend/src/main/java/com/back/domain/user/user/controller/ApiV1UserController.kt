@@ -1,7 +1,6 @@
 package com.back.domain.user.user.controller
 
 import com.back.domain.user.user.dto.*
-import com.back.domain.user.user.dto.UserLoginResponse.Companion.of
 import com.back.domain.user.user.service.UserService
 import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
@@ -10,7 +9,6 @@ import com.back.global.rsData.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import lombok.RequiredArgsConstructor
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 
@@ -72,7 +70,7 @@ class ApiV1UserController(
         val actor = rq.actor
             ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
 
-        userService.deleteById(actor.id!!)
+        userService.deleteById(actor.id)
         rq.setCookie("accessToken", "")
 
         return RsData(
