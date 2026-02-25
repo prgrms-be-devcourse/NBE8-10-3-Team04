@@ -55,7 +55,6 @@ class ItemRecommendationService(
      * AI 요청을 위한 프롬프트 생성
      */
     private fun buildPrompt(itemName: String): String {
-        // 💡 4. 자바의 문자열 더하기(+) 대신 코틀린 템플릿($) 사용!
         return "${itemName}의 권장 교체 주기를 알려줘."
     }
 
@@ -82,7 +81,6 @@ class ItemRecommendationService(
      * AI 응답 JSON 파싱
      */
     private fun parseJson(rawText: String?): ItemCycleRecommendResponse {
-        // 💡 7. 코틀린이 제공하는 초강력 문자열 검사 함수!
         if (rawText.isNullOrBlank()) {
             log.error("AI로부터 빈 응답을 받음")
             throw ServiceException(ErrorCode.AI_NO_RESPONSE)

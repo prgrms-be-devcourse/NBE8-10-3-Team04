@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional
  * - 가장 자주 교체한 아이템 순위
  */
 @Service
-// 💡 1. 롬복(@RequiredArgsConstructor)을 지우고 코틀린의 '주 생성자'를 사용합니다.
 class ItemStatisticsService(
     private val itemHistoryRepository: ItemHistoryRepository
 ) {
@@ -29,9 +28,8 @@ class ItemStatisticsService(
      * @return 카테고리별 평균 사용 기간 목록
      */
     @Transactional(readOnly = true)
-    fun getCategoryAverageUsage(userId: Long): List<CategoryAverageUsageResponse> { // 💡 2. 파라미터 널(?) 제거 및 List 사용
+    fun getCategoryAverageUsage(userId: Long): List<CategoryAverageUsageResponse> {
         // Repository에서 카테고리별 평균 사용 기간을 조회
-        // 💡 3. 안전하게 주입받았으므로 보기 싫은 !! 연산자 없이 바로 호출 가능합니다.
         val rawResults = itemHistoryRepository.findAverageUsageDaysByCategoryForUser(userId)
 
         // 결과를 DTO로 변환

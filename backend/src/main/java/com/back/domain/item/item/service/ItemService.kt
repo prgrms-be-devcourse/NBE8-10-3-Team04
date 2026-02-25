@@ -40,9 +40,6 @@ class ItemService(
     private val itemRepository: ItemRepository,
     private val categoryRepository: CategoryRepository,
     private val s3ImageService: S3ImageService,
-    private val itemHistoryRepository: ItemHistoryRepository,
-    private val genAiClient: Client,
-    private val objectMapper: ObjectMapper
 ) {
 
     // == 조회 ==
