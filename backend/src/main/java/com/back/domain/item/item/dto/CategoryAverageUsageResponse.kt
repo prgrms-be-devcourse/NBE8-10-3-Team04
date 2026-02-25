@@ -1,9 +1,9 @@
 package com.back.domain.item.item.dto
 
 data class CategoryAverageUsageResponse(
-    @JvmField val categoryId: Long?,
-    @JvmField val categoryName: String?,
-    @JvmField val averageUsageDays: Double?
+    @JvmField val categoryId: Long,
+    @JvmField val categoryName: String,
+    @JvmField val averageUsageDays: Double
 ) {
     companion object {
         /**
@@ -15,8 +15,8 @@ data class CategoryAverageUsageResponse(
         @JvmStatic //
         fun from(result: Map<String, Any?>): CategoryAverageUsageResponse {
             return CategoryAverageUsageResponse(
-                categoryId = (result["categoryId"] as? Number)?.toLong(),
-                categoryName = result["categoryName"] as? String,
+                categoryId = (result["categoryId"] as Number).toLong(),
+                categoryName = result["categoryName"] as String,
                 averageUsageDays = (result["averageUsageDays"] as? Number)?.toDouble() ?: 0.0
             )
         }
@@ -29,7 +29,7 @@ data class CategoryAverageUsageResponse(
          */
         @JvmStatic
         fun fromList(results: List<Map<String, Any?>>): List<CategoryAverageUsageResponse> {
-            return results.map { from(it) }
+            return results.map(::from)
         }
     }
 }
