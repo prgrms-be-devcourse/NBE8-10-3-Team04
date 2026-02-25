@@ -79,16 +79,14 @@ class ApiV1UserController(
 
     @GetMapping("/me")
     @Operation(summary = "내 정보 조회")
-    fun me(): RsData<UserDto> {
-        val actor = rq.requireActor()
-
-        // UserDto는 이미 필요한 정보를 포함하고 있으므로 그대로 반환
-        return RsData(
-            "200-1",
-            "${actor.loginId}님의 정보입니다.",
-            actor
-        )
-    }
+    fun me(): RsData<UserDto> =
+        rq.requireActor().let { actor ->
+            RsData(
+                "200-1",
+                "${actor.loginId}님의 정보입니다.",
+                actor
+            )
+        }
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃")
