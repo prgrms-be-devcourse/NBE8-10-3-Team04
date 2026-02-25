@@ -106,7 +106,7 @@ class ItemService(
         userId: Long,
         category: Category,
         name: String,
-        imgUrl: String,
+        imgUrl: String?,
         startDate: LocalDate,
         cycleDays: String,
         nextReplacementDate: LocalDate,
@@ -166,8 +166,8 @@ class ItemService(
         val finalImgUrl = resolveImageUrl(request.image, request.imgUrl, item.imgUrl) // 중복 제거
 
         // // 기존 이미지 파일이 동일하지 않으면 삭제
-        if (finalImgUrl != item.imgUrl) {
-            s3ImageService.delete(item.imgUrl)
+        if (finalImgUrl != item.imgUrl && item.imgUrl != null) {
+            item.imgUrl?.let { s3ImageService.delete(it) }
         }
 
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
@@ -259,12 +259,12 @@ class ItemService(
      * existingUrl 기존 이미지 URL (수정 시)
      * return 최종 이미지 URL
      */
-    private fun resolveImageUrl(image: MultipartFile?, providedUrl: String?, existingUrl: String?): String {
+    private fun resolveImageUrl(image: MultipartFile?, providedUrl: String?, existingUrl: String?): String? {
         // 파일이 있으면 S3 업로드
         if (image != null && !image.isEmpty) {
             return try {
                 s3ImageService.upload(image)
-            } catch (e: IOException) {
+            } catch (e: Exception) {
                 throw ServiceException(ErrorCode.IMAGE_UPLOAD_FAILED)
             }
         }
