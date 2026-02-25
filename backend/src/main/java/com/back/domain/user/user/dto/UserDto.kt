@@ -3,7 +3,7 @@ package com.back.domain.user.user.dto
 import com.back.domain.user.user.entity.User
 
 data class UserDto(
-    val id: Long?,       // 저장 전에는 null일수 있어서 안전하게 하기 위해 ? 사용
+    val id: Long,
     val loginId: String,
     val email: String
 ) {
