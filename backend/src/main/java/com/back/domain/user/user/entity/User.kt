@@ -7,10 +7,6 @@ import java.util.*
 @Entity
 @Table(name = "users")
 class User(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var _id: Long? = null,     //저장 전에는 id가 없어서 null로 지정
-
     @Column(unique = true)
     var loginId: String,
 
@@ -29,6 +25,11 @@ class User(
     //기존 private List<Item> items = new ArrayList<>(); 여서 MutableList로 사용
 
 ) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var _id: Long? = null
+        protected set
+
     val id: Long
         get() = _id ?: error("User is not persisted yet (id is null)")
 
