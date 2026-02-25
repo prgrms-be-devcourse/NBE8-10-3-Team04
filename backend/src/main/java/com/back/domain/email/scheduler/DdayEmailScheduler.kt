@@ -29,7 +29,7 @@ class DdayEmailScheduler(
 
         for (item in itemsDueToday) {
             val member = item.user // // 아이템과 연관된 사용자 조회
-            emailService.sendDDayNotification(member!!.getEmail(), item) // // D-Day 알림 이메일 발송
+            emailService.sendDDayNotification(member!!.email, item) // // D-Day 알림 이메일 발송
         }
     }
 }

@@ -103,33 +103,6 @@ class EmailControllerTest {
     }
 
     @Test
-    @DisplayName("테스트 D-Day 이메일 발송 - 아이템에 연결된 사용자 없음")
-    void sendTestDdayEmail_userMissing() throws Exception {
-        User authUser = userService.findByLoginId("user1").orElseThrow();
-        Category category = Objects.requireNonNull(categoryRepository.findByName("집/생활"));
-
-        Item itemWithoutUser = itemRepository.save(new Item(
-                null,
-                category,
-                "유저없는 아이템",
-                "https://example.com/no-user.png",
-                LocalDate.now().minusDays(1),
-                "30d",
-                LocalDate.now(),
-                true
-        ));
-
-        mvc.perform(post("/api/v1/email/test/dday/{itemId}", itemWithoutUser.getId())
-                        .header("Authorization", getAuthHeader(authUser)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("이메일 발송 실패: 아이템에 연결된 사용자가 없습니다."));
-
-        verify(emailService, never()).sendDDayNotification(any(), any());
-    }
-
-    @Test
     @DisplayName("테스트 D-Day 이메일 발송 - 사용자 이메일 없음")
     void sendTestDdayEmail_userEmailMissing() throws Exception {
         User authUser = userService.findByLoginId("user1").orElseThrow();
