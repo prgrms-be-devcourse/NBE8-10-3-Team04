@@ -63,7 +63,7 @@ class ItemService(
     // userId로 User 조회
     private fun findUserOrThrow(userId: Long): User {
         return userService.findById(userId)
-            .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
+            ?: throw ServiceException(ErrorCode.USER_NOT_FOUND)
     }
 
     // categoryId로 Category 조회

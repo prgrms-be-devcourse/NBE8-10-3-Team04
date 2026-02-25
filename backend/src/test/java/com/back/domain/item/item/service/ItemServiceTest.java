@@ -207,7 +207,7 @@ class ItemServiceTest {
     @DisplayName("아이템 생성 성공")
     void createItem_Success() {
         // 사용자 및 카테고리 조회, 아이템 저장, 히스토리 생성 동작 모킹
-        given(userService.findById(1L)).willReturn(Optional.of(testUser));
+        given(userService.findById(1L)).willReturn(testUser);
         given(categoryRepository.findById(1L)).willReturn(Optional.of(testCategory));
         given(itemRepository.save(any(Item.class))).willReturn(testItem);
         doNothing().when(itemHistoryService).createItemHistory(any(Item.class));
@@ -226,7 +226,7 @@ class ItemServiceTest {
     void createItem_Failure_UserNotFound() {
         // 카테고리는 존재하지만 사용자가 없는 상황 모킹
         given(categoryRepository.findById(1L)).willReturn(Optional.of(testCategory));
-        given(userService.findById(1L)).willReturn(Optional.empty());
+        given(userService.findById(1L)).willReturn(null);
 
         // 예외 발생 검증: USER_NOT_FOUND
         assertThatThrownBy(() -> itemService.createItem(1L, createRequest))
@@ -257,7 +257,7 @@ class ItemServiceTest {
                 1L, "칫솔", null, mockFile, LocalDate.of(2024, 1, 1), "90d"
         );
 
-        given(userService.findById(1L)).willReturn(Optional.of(testUser));
+        given(userService.findById(1L)).willReturn(testUser);
         given(categoryRepository.findById(1L)).willReturn(Optional.of(testCategory));
         given(s3ImageService.upload(mockFile)).willReturn("https://s3.amazonaws.com/uploaded-image.png");
         given(itemRepository.save(any(Item.class))).willReturn(testItem);

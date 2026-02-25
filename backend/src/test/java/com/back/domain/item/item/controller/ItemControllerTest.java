@@ -55,7 +55,7 @@ public class ItemControllerTest {
     @DisplayName("아이템 목록 조회")
     void getItems_Success_Verification() throws Exception {
 
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
         // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
         Category category = categoryRepository.save(new Category("욕실"));
 
@@ -81,7 +81,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 단건 조회")
     void getItem_success() throws Exception {
-        User user = userService.findByLoginId("user1").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
         Long id = 1L;
         Item item = itemService.findById(id).get();
 
@@ -110,7 +110,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 단건 조회 - 없는 아이템")
     void getItem_itemNotFound() throws Exception {
-        User user = userService.findByLoginId("user1").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
         Long id = 99L;
 
         ResultActions resultActions = mvc
@@ -133,7 +133,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 교체")
     void replaceItem_success() throws Exception {
-        User user = userService.findByLoginId("user1").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
         Long id = 1L;
         Item item = itemService.findById(id).get();
 
@@ -158,7 +158,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 교체 - 작성자가 아닐 때")
     void replaceItem_notOwner() throws Exception {
-        User user = userService.findByLoginId("user2").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user2"));
         Long id = 1L;
 
         ResultActions resultActions = mvc
@@ -180,7 +180,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정")
     void modifyItem_success() throws Exception {
-        User user = userService.findByLoginId("user1").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
         Long id = 1L;
         Item item = itemService.findById(id).get();
 
@@ -219,7 +219,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정 - 작성자가 아닐 때")
     void modifyItem_notOwner() throws Exception {
-        User user = userService.findByLoginId("user2").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user2"));
         Long id = 1L;
 
         MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart("/api/v1/items/" + id);
@@ -252,7 +252,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정 - 존재하지 않는 카테고리")
     void modifyItem_categoryNotFound() throws Exception {
-        User user = userService.findByLoginId("user1").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
         Long id = 1L;
 
         MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart("/api/v1/items/" + id);
@@ -286,7 +286,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정 - 유효하지 않은 주기 입력")
     void modifyItem_InvalidCycleDate() throws Exception {
-        User user = userService.findByLoginId("user1").get();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
         Long id = 1L;
 
         MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart("/api/v1/items/" + id);
@@ -319,7 +319,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - 성공")
     void createItem_success() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -353,7 +353,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - 월 단위 주기")
     void createItem_withMonthCycle() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -381,7 +381,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - 년 단위 주기")
     void createItem_withYearCycle() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -408,7 +408,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - categoryId 누락")
     void createItem_missingCategoryId() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -431,7 +431,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - name 누락")
     void createItem_missingName() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -454,7 +454,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - cycleDays 누락")
     void createItem_missingCycleDays() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -477,7 +477,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - 잘못된 cycleDays 형식")
     void createItem_invalidCycleDaysFormat() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -502,7 +502,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - 존재하지 않는 카테고리")
     void createItem_categoryNotFound() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -527,7 +527,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - cycleDays 값이 0 이하")
     void createItem_invalidCycleDaysValue() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -552,7 +552,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - imgUrl 없이 등록")
     void createItem_withoutImgUrl() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         ResultActions resultActions = mvc
                 .perform(
@@ -577,7 +577,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 삭제 - 성공")
     void deleteItem_success() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
         Long id = 1L;
 
         ResultActions resultActions = mvc
@@ -599,7 +599,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 삭제 - 작성자가 아닐 때")
     void deleteItem_notOwner() throws Exception {
-        User user = userService.findById(2L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(2L));
         Long id = 1L;
 
         ResultActions resultActions = mvc
@@ -621,7 +621,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 삭제 - 존재하지 않는 아이템")
     void deleteItem_itemNotFound() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
         Long nonExistentId = 9999L;
 
         ResultActions resultActions = mvc
@@ -643,7 +643,7 @@ public class ItemControllerTest {
     @DisplayName("아이템 활성화/비활성화 토글")
     void toggleItemActive_RealData() throws Exception {
 
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
         // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
         Category category = categoryRepository.save(new Category("욕실"));
 
@@ -667,7 +667,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("카테고리별 평균 사용 기간 조회 - 실제 DB 쿼리 검증")
     void getCategoryAverageUsage_Integration() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
 
         // 카테고리 생성
         // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
@@ -710,7 +710,7 @@ public class ItemControllerTest {
     @Test
     @DisplayName("가장 자주 교체한 아이템 순위 조회")
     void getMostReplacedItems_Integration() throws Exception {
-        User user = userService.findById(1L).orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findById(1L));
         // Kotlin 기본 생성자를 사용하여 Category 객체를 생성하도록 수정
         Category category = categoryRepository.save(new Category("욕실"));
 

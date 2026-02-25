@@ -76,7 +76,7 @@ class UserServiceTest {
         String encodedPassword = "encodedPassword123";
 
         // 중복 ID가 없고, 비밀번호 암호화가 정상 수행되도록 설정
-        given(userRepository.findByLoginId(loginId)).willReturn(Optional.empty());
+        given(userRepository.findByLoginId(loginId)).willReturn(null);
         given(passwordEncoder.encode(rawPassword)).willReturn(encodedPassword);
         // save 호출 시 전달된 객체를 그대로 반환하도록 설정 (메서드 체이닝 등 대비)
         given(userRepository.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
@@ -106,7 +106,7 @@ class UserServiceTest {
         String email = "duplicate@example.com";
 
         // 이미 가입된 사용자가 존재하는 상황 설정
-        given(userRepository.findByLoginId(loginId)).willReturn(Optional.of(testUser));
+        given(userRepository.findByLoginId(loginId)).willReturn(testUser);
 
         // 예외 발생 및 에러 코드 검증
         assertThatThrownBy(() -> userService.join(loginId, password, email))
@@ -123,13 +123,13 @@ class UserServiceTest {
     @DisplayName("findByLoginId() - 로그인 아이디로 사용자를 찾는다")
     void findByLoginId() {
         String loginId = "testUser";
-        given(userRepository.findByLoginId(loginId)).willReturn(Optional.of(testUser));
+        given(userRepository.findByLoginId(loginId)).willReturn(testUser);
 
-        Optional<User> foundUser = userService.findByLoginId(loginId);
+        User foundUser = userService.findByLoginId(loginId);
 
         // 반환된 Optional 객체 내 데이터 검증
-        assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getLoginId()).isEqualTo(loginId);
+        assertThat(foundUser).isNotNull();
+        assertThat(foundUser.getLoginId()).isEqualTo(loginId);
         verify(userRepository).findByLoginId(loginId);
     }
 
@@ -246,11 +246,11 @@ class UserServiceTest {
     @DisplayName("findByApiKey() - API 키로 사용자를 찾는다")
     void findByApiKey() {
         String apiKey = "test-api-key";
-        given(userRepository.findByApiKey(apiKey)).willReturn(Optional.of(testUser));
+        given(userRepository.findByApiKey(apiKey)).willReturn(testUser);
 
-        Optional<User> foundUser = userService.findByApiKey(apiKey);
+        User foundUser = userService.findByApiKey(apiKey);
 
-        assertThat(foundUser).isPresent();
+        assertThat(foundUser).isNotNull();
         verify(userRepository).findByApiKey(apiKey);
     }
 
@@ -270,12 +270,13 @@ class UserServiceTest {
     @Test
     @DisplayName("findById() - ID로 사용자를 찾는다")
     void findById() {
+        //repository는 Optional이고 Service는 nullable에 맞춰서 변경
         Long userId = 1L;
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
 
-        Optional<User> foundUser = userService.findById(userId);
+        User foundUser = userService.findById(userId);
 
-        assertThat(foundUser).isPresent();
+        assertThat(foundUser).isNotNull();
         verify(userRepository).findById(userId);
     }
 

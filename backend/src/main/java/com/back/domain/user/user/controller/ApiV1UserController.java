@@ -50,8 +50,10 @@ public class ApiV1UserController {
     public RsData<UserLoginResponse> login(
             @Valid @RequestBody UserLoginRequest reqBody
     ) {
-        User user = userService.findByLoginId(reqBody.getLoginId())
-                .orElseThrow(() -> new ServiceException(ErrorCode.INVALID_LOGIN_ID));
+        User user = userService.findByLoginId(reqBody.getLoginId());
+        if (user == null) {
+            throw new ServiceException(ErrorCode.INVALID_LOGIN_ID);
+        }
 
         userService.checkPassword(
                 user,
@@ -185,8 +187,8 @@ public class ApiV1UserController {
             throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
-        User user = userService.findById(actor.getId())
-                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+        User user = userService.findById(actor.getId());
+        if (user == null) throw new ServiceException(ErrorCode.USER_NOT_FOUND);
 
         userService.checkPassword(user, request.getPassword());
 

@@ -163,8 +163,10 @@ public class ApiV1UserControllerTest {
     @DisplayName("내 정보")
     void t3() throws Exception {
         // 1. [준비] BaseInitData의 user1 사용 (없으면 생성)
-        User user = userService.findByLoginId("user1")
-                .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
+        User user = userService.findByLoginId("user1");
+        if (user == null) {
+            user = userService.join("user1", "1234", "user1@test.com");
+        }
 
         // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
         ResultActions loginResult = mvc
@@ -212,8 +214,10 @@ public class ApiV1UserControllerTest {
     @DisplayName("이메일 수정")
     void t4() throws Exception {
         // 1. [준비] 회원 생성
-        User user = userService.findByLoginId("user1")
-                .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
+        User user = userService.findByLoginId("user1");
+        if (user == null) {
+            user = userService.join("user1", "1234", "user1@test.com");
+        }
         String originalEmail = user.getEmail();
 
         // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
@@ -264,7 +268,7 @@ public class ApiV1UserControllerTest {
                 .andExpect(jsonPath("$.data.email").value("updated@test.com"));
 
         // 5. [검증] DB에서 실제로 수정되었는지 확인
-        User afterUser = userService.findByLoginId("user1").orElseThrow();
+        User afterUser = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
         assertNotEquals(originalEmail, afterUser.getEmail(), "이메일이 수정되어야 합니다");
         assertEquals("updated@test.com", afterUser.getEmail(), "이메일이 올바르게 수정되어야 합니다");
     }
@@ -273,8 +277,10 @@ public class ApiV1UserControllerTest {
     @DisplayName("비밀번호 변경")
     void t5() throws Exception {
         // 1. [준비] 회원 생성
-        User user = userService.findByLoginId("user2")
-                .orElseGet(() -> userService.join("user2", "1234", "user2@test.com"));
+        User user = userService.findByLoginId("user1");
+        if (user == null) {
+            user = userService.join("user1", "1234", "user1@test.com");
+        }
 
         // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
         ResultActions loginResult = mvc
@@ -375,7 +381,7 @@ public class ApiV1UserControllerTest {
                 .andExpect(cookie().value("accessToken", "")); // 토큰 쿠키 비워졌는지 확인
 
         // DB에서 실제로 삭제(또는 논리적 삭제)되었는지 확인
-        assertTrue(userService.findByLoginId("deleteUser").isEmpty(), "회원이 삭제되어야 합니다.");
+        assertNull(userService.findByLoginId("deleteUser"), "회원이 삭제되어야 합니다.");
     }
 
     @Test

@@ -62,7 +62,11 @@ class EmailControllerTest {
     @Test
     @DisplayName("테스트 D-Day 이메일 발송 - 성공")
     void sendTestDdayEmail_success() throws Exception {
-        User authUser = userService.findByLoginId("user1").orElseThrow();
+        User authUser = userService.findByLoginId("user1");
+        if (authUser == null) {
+            throw new IllegalStateException("user1 not found");
+        }
+
         Item item = itemRepository.findAll().stream()
                 .filter(it -> it.getUser() != null)
                 .filter(it -> it.getUser().getEmail() != null && !it.getUser().getEmail().isBlank())
@@ -90,7 +94,10 @@ class EmailControllerTest {
     @Test
     @DisplayName("테스트 D-Day 이메일 발송 - 아이템 없음")
     void sendTestDdayEmail_itemNotFound() throws Exception {
-        User authUser = userService.findByLoginId("user1").orElseThrow();
+        User authUser = userService.findByLoginId("user1");
+        if (authUser == null) {
+            throw new IllegalStateException("user1 not found");
+        }
 
         mvc.perform(post("/api/v1/email/test/dday/{itemId}", 999999L)
                         .header("Authorization", getAuthHeader(authUser)))
@@ -105,7 +112,11 @@ class EmailControllerTest {
     @Test
     @DisplayName("테스트 D-Day 이메일 발송 - 사용자 이메일 없음")
     void sendTestDdayEmail_userEmailMissing() throws Exception {
-        User authUser = userService.findByLoginId("user1").orElseThrow();
+        User authUser = userService.findByLoginId("user1");
+        if (authUser == null) {
+            throw new IllegalStateException("user1 not found");
+        }
+
         Category category = Objects.requireNonNull(categoryRepository.findByName("집/생활"));
 
         User noEmailUser = userRepository.save(new User("noEmailUser", "pw", ""));

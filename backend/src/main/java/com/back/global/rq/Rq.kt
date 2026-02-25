@@ -89,6 +89,6 @@ class Rq(
             return principal.id
         }
 
-    val member: Optional<User>
+    val member: User?
         get() = userService.findById(memberId)
 }
