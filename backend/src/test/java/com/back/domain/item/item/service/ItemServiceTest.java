@@ -75,9 +75,9 @@ class ItemServiceTest {
     void setUp() {
         // 테스트 실행 전 공통으로 사용할 User, Category, Item, Request 객체 초기화
         testUser = mock(User.class);
-        when(testUser.getId()).thenReturn(1L);
-        when(testUser.getEmail()).thenReturn("test@example.com");
-        when(testUser.getPassword()).thenReturn("password123");
+        lenient().when(testUser.getId()).thenReturn(1L);
+        lenient().when(testUser.getEmail()).thenReturn("test@example.com");
+        lenient().when(testUser.getPassword()).thenReturn("password123");
 
         testCategory = new Category("생활용품");
 
