@@ -71,7 +71,7 @@ class BaseInitData(
         itemService.createItem(
             user1.id,
             ItemCreateRequest(
-                categoryId = bathroom.id,
+                categoryId = bathroom.id!!,
                 name = "칫솔",
                 imgUrl = "https://example.com/toothbrush.png",
                 image = null,
@@ -83,7 +83,7 @@ class BaseInitData(
         itemService.createItem(
             user1.id,
             ItemCreateRequest(
-                categoryId = kitchen.id,
+                categoryId = kitchen.id!!,
                 name = "수세미",
                 imgUrl = "https://example.com/sponge.png",
                 image = null,
@@ -95,7 +95,7 @@ class BaseInitData(
         itemService.createItem(
             user2.id,
             ItemCreateRequest(
-                categoryId = car.id,
+                categoryId = car.id!!,
                 name = "엔진오일",
                 imgUrl = "https://example.com/engineoil.png",
                 image = null,
@@ -107,7 +107,7 @@ class BaseInitData(
         itemService.createItem(
             user1.id,
             ItemCreateRequest(
-                categoryId = bathroom.id,
+                categoryId = bathroom.id!!,
                 name = "테스트용 칫솔 (D-Day 0)",
                 imgUrl = "https://example.com/test-toothbrush.png",
                 image = null,
