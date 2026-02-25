@@ -116,13 +116,4 @@ class BaseInitData(
             )
         )
     }
-
-    @Transactional
-    fun work1() {
-        if (userService.count() > 0) return
-
-        val user1 = userService.join("user1", "1234", "유저1")
-        // 프로퍼티 접근 구문 사용 (getLoginId() -> loginId)
-        if (isNotProd) user1.modifyApiKey(user1.loginId)
-    }
 }
