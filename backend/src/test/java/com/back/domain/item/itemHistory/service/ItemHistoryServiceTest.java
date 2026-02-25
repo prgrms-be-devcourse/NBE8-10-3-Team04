@@ -94,9 +94,9 @@ class ItemHistoryServiceTest {
         // 조회된 DTO가 아이템 ID, 시작일 등 데이터를 올바르게 매핑했는지 검증
         assertThat(responses).hasSize(1);
         ItemHistoryResponse response = responses.get(0);
-        assertThat(response.itemId()).isEqualTo(item.getId());
-        assertThat(response.startDate()).isEqualTo(item.getStartDate());
-        assertThat(response.endDate()).isNull();
+        assertThat(response.itemId).isEqualTo(item.getId());
+        assertThat(response.startDate).isEqualTo(item.getStartDate());
+        assertThat(response.endDate).isNull();
     }
 
     @Test
@@ -110,8 +110,8 @@ class ItemHistoryServiceTest {
         List<ItemHistoryResponse> responses = itemHistoryService.getItemHistories(item.getId(), user.getId());
 
         assertThat(responses).hasSize(2);
-        assertThat(responses.get(0).startDate())
-                .isAfterOrEqualTo(responses.get(1).startDate());
+        assertThat(responses.get(0).startDate)
+                .isAfterOrEqualTo(responses.get(1).startDate);
     }
 
     @Test
@@ -140,8 +140,8 @@ class ItemHistoryServiceTest {
         List<ItemAllHistoryResponse> responses = itemHistoryService.getAllItemHistories(user.getId());
 
         assertThat(responses).hasSize(1);
-        assertThat(responses.get(0).itemName()).isEqualTo(item.getName());
-        assertThat(responses.get(0).itemId()).isEqualTo(item.getId());
+        assertThat(responses.get(0).itemName).isEqualTo(item.getName());
+        assertThat(responses.get(0).itemId).isEqualTo(item.getId());
     }
 
     @Test
@@ -155,12 +155,12 @@ class ItemHistoryServiceTest {
         assertThat(responses).hasSize(1);
         ItemAllHistoryResponse res = responses.get(0);
 
-        assertThat(res.itemId()).isEqualTo(item.getId());
-        assertThat(res.itemName()).isEqualTo(item.getName());
-        assertThat(res.categoryName()).isEqualTo(category.getName());
-        assertThat(res.imgUrl()).isEqualTo(item.getImgUrl());
-        assertThat(res.startDate()).isEqualTo(item.getStartDate());
-        assertThat(res.endDate()).isNull();
+        assertThat(res.itemId).isEqualTo(item.getId());
+        assertThat(res.itemName).isEqualTo(item.getName());
+        assertThat(res.categoryName).isEqualTo(category.getName());
+        assertThat(res.imgUrl).isEqualTo(item.getImgUrl());
+        assertThat(res.startDate).isEqualTo(item.getStartDate());
+        assertThat(res.endDate).isNull();
     }
 
     @Test
