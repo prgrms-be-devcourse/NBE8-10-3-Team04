@@ -38,7 +38,7 @@ class CategoryControllerTest {
     @DisplayName("카테고리 조회 - BaseInitData 기본 카테고리 8개 조회 성공")
     void getCategories_success_withBaseInitData() throws Exception {
         // BaseInitData 등에 의해 생성된 기존 유저 조회
-        User user = userService.findByLoginId("user1").orElseThrow();
+        User user = java.util.Objects.requireNonNull(userService.findByLoginId("user1"));
 
         // 헤더에 인증 정보 포함하여 요청
         mvc.perform(get("/api/v1/categories")
