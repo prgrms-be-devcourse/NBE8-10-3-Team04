@@ -11,11 +11,6 @@ import org.springframework.transaction.annotation.Transactional
  * - 카테고리별 평균 사용 기간
  * - 가장 자주 교체한 아이템 순위
  */
-/**
- * 아이템 통계 정보를 제공하는 서비스
- * - 카테고리별 평균 사용 기간
- * - 가장 자주 교체한 아이템 순위
- */
 @Service
 class ItemStatisticsService(
     private val itemHistoryRepository: ItemHistoryRepository
