@@ -65,8 +65,7 @@ class ApiV1UserController(
     @DeleteMapping("/me")
     @Operation(summary = "탈퇴")
     fun deleteMe(): RsData<UserDto> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         userService.deleteById(actor.id)
         rq.setCookie("accessToken", "")
@@ -81,8 +80,7 @@ class ApiV1UserController(
     @GetMapping("/me")
     @Operation(summary = "내 정보 조회")
     fun me(): RsData<UserDto> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         // UserDto는 이미 필요한 정보를 포함하고 있으므로 그대로 반환
         return RsData(
@@ -109,8 +107,7 @@ class ApiV1UserController(
     fun updateProfile(
         @Valid @RequestBody request: UserProfileUpdateRequest
     ): RsData<UserUpdateResponse> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         val updatedUser = userService.updateProfile(actor.id, request.email)
 
@@ -131,8 +128,7 @@ class ApiV1UserController(
     fun changePassword(
         @Valid @RequestBody request: PasswordChangeRequest
     ): RsData<UserUpdateResponse> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         val updatedUser = userService.changePassword(
             actor.id,
@@ -157,8 +153,7 @@ class ApiV1UserController(
     fun verifyPassword(
         @Valid  @RequestBody request: PasswordVerifyRequest
     ): RsData<Void> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         val user = userService.findById(actor.id)
             ?: throw ServiceException(ErrorCode.USER_NOT_FOUND)
