@@ -39,7 +39,7 @@ class CustomAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        runCatching  {
+        runCatching {
             work(request, response, filterChain)
         }.onFailure { e ->
             if (e is ServiceException) {
@@ -58,7 +58,7 @@ class CustomAuthenticationFilter(
     private fun work(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain:FilterChain
+        filterChain: FilterChain
     ) {
 
         // 1) API 요청이 아닌 경우 패스
@@ -136,12 +136,13 @@ class CustomAuthenticationFilter(
         // 4-2) accessToken이 없으면 apiKey 탐색
         if (user == null) {
             user = userService.findByApiKey(apiKey)
-                .orElseThrow { ServiceException(ErrorCode.INVALID_API_KEY) }
+                ?: throw ServiceException(ErrorCode.INVALID_API_KEY)
         }
 
         // accessToken이 만료되었거나 유효하지 않다면 apiKey를 통해서 재발급
         if (isAccessTokenExists && !isAccessTokenValid) {
-            val userAccessToken = userService.genAccessToken(user)
+            val u = user ?: throw ServiceException(ErrorCode.USER_NOT_FOUND)
+            val userAccessToken = userService.genAccessToken(u)
 
             rq.setCookie("accessToken", userAccessToken)
             rq.setHeader("Authorization", userAccessToken)

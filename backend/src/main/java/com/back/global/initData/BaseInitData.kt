@@ -49,18 +49,18 @@ class BaseInitData(
     fun createDefaultUsers() {
         // 자바의 Supplier를 사용하던 복잡한 Optional 처리를 코틀린 람다식(orElseGet { })으로 변경
         userService.findByLoginId("user1")
-            .orElseGet { userService.join("user1", "1234", "hhyukk1273@gmail.com") }
+            ?: userService.join("user1", "1234", "hhyukk1273@gmail.com")
 
         userService.findByLoginId("user2")
-            .orElseGet { userService.join("user2", "1234", "user2@test.com") }
+            ?: userService.join("user2", "1234", "user2@test.com")
     }
 
     @Transactional
     fun initItems() {
         if (itemService.count() > 0) return
 
-        val user1 = userService.findByLoginId("user1").orElseThrow()
-        val user2 = userService.findByLoginId("user2").orElseThrow()
+        val user1 = userService.findByLoginId("user1")?: error("user1을 찾을 수 없습니다.")
+        val user2 = userService.findByLoginId("user2")?: error("user2을 찾을 수 없습니다.")
 
         // Objects.requireNonNull 대신 코틀린의 엘비스 연산자(?:)와 error() 함수를 사용해 예외를 처리
         val bathroom = categoryRepository.findByName("욕실") ?: error("욕실 카테고리를 찾을 수 없습니다.")
