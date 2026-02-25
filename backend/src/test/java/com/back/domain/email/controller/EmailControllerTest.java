@@ -135,7 +135,7 @@ class EmailControllerTest {
         User authUser = userService.findByLoginId("user1").orElseThrow();
         Category category = Objects.requireNonNull(categoryRepository.findByName("집/생활"));
 
-        User noEmailUser = userRepository.save(new User("noEmailUser", "pw", null));
+        User noEmailUser = userRepository.save(new User("noEmailUser", "pw", ""));
         Item item = itemRepository.save(new Item(
                 noEmailUser,
                 category,
