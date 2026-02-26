@@ -18,6 +18,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.util.Optional
@@ -79,10 +80,10 @@ internal class UserServiceTest {
         val savedUser = userService.join(loginId, rawPassword, email)
 
         // ArgumentCaptor를 사용하여 Repository.save() 메서드에 실제로 전달된 User 객체를 가로챔
-        val captor: ArgumentCaptor<User> = ArgumentCaptor.forClass(User::class.java)
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).save(captor.capture())
+        val captor = argumentCaptor<User>()
+        BDDMockito.then(userRepository).should().save(captor.capture())
 
-        val capturedUser = captor.value
+        val capturedUser = captor.firstValue
 
         // 가로챈 객체 내부에 암호화된 비밀번호가 올바르게 설정되었는지 정밀 검증
         assertThat(capturedUser.loginId).isEqualTo(loginId)
@@ -109,7 +110,7 @@ internal class UserServiceTest {
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DUPLICATE_LOGIN_ID)
 
         // 예외 발생 시 암호화나 DB 저장이 실행되지 않았음을 보장
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findByLoginId(loginId)
+        BDDMockito.then(userRepository).should().findByLoginId(loginId)
         BDDMockito.then(passwordEncoder).shouldHaveNoInteractions()
         BDDMockito.then(userRepository).should(BDDMockito.never()).save(any<User>())
     }
@@ -124,7 +125,7 @@ internal class UserServiceTest {
 
         // 반환된 Optional 객체 내 데이터 검증
         assertThat(foundUser.loginId).isEqualTo(loginId)
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findByLoginId(loginId)
+        BDDMockito.then(userRepository).should().findByLoginId(loginId)
     }
 
     @Test
@@ -150,12 +151,12 @@ internal class UserServiceTest {
 
         userService.deleteById(userId)
 
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findById(userId)
+        BDDMockito.then(userRepository).should().findById(userId)
 
         // S3 서비스 삭제 메서드에 전달된 URL 리스트를 ArgumentCaptor로 포착
         val captor: ArgumentCaptor<List<String>> = ArgumentCaptor.forClass(List::class.java) as ArgumentCaptor<List<String>>
 
-        BDDMockito.then(s3ImageService).should(BDDMockito.times(1)).deleteMultiple(captor.capture())
+        BDDMockito.then(s3ImageService).should().deleteMultiple(captor.capture())
 
         val capturedUrls = captor.value
         assertThat(capturedUrls)
@@ -165,7 +166,7 @@ internal class UserServiceTest {
                 "https://s3.amazonaws.com/bucket/image2.jpg"
             )
 
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).deleteById(userId)
+        BDDMockito.then(userRepository).should().deleteById(userId)
     }
 
     @Test
@@ -180,10 +181,10 @@ internal class UserServiceTest {
 
         userService.deleteById(userId)
 
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findById(userId)
+        BDDMockito.then(userRepository).should().findById(userId)
         // 이미지가 없으므로 S3 삭제 로직은 호출되지 않아야 함
         BDDMockito.then(s3ImageService).should(BDDMockito.never()).deleteMultiple(any<List<String>>())
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).deleteById(userId)
+        BDDMockito.then(userRepository).should().deleteById(userId)
 
     }
 
@@ -198,7 +199,7 @@ internal class UserServiceTest {
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND)
 
         // 예외 발생 시 후속 삭제 작업들이 실행되지 않아야 함
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findById(userId)
+        BDDMockito.then(userRepository).should().findById(userId)
         BDDMockito.then(s3ImageService).should(BDDMockito.never()).deleteMultiple(any())
         BDDMockito.then(userRepository).should(BDDMockito.never()).deleteById(any())
     }
@@ -212,7 +213,7 @@ internal class UserServiceTest {
 
         userService.checkPassword(testUser, rawPassword)
 
-        BDDMockito.then(passwordEncoder).should(BDDMockito.times(1)).matches(rawPassword, testUser.password)
+        BDDMockito.then(passwordEncoder).should().matches(rawPassword, testUser.password)
     }
 
     @Test
@@ -226,7 +227,7 @@ internal class UserServiceTest {
             .isInstanceOf(ServiceException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PASSWORD)
 
-        BDDMockito.then(passwordEncoder).should(BDDMockito.times(1)).matches(wrongPassword, testUser.password)
+        BDDMockito.then(passwordEncoder).should().matches(wrongPassword, testUser.password)
     }
 
     @Test
@@ -238,7 +239,7 @@ internal class UserServiceTest {
         val foundUser = requireNotNull(userService.findByApiKey(apiKey))
 
         assertThat(foundUser.loginId).isEqualTo(testUser.loginId)
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findByApiKey(apiKey)
+        BDDMockito.then(userRepository).should().findByApiKey(apiKey)
     }
 
     @Test
@@ -251,7 +252,7 @@ internal class UserServiceTest {
         val actualToken = userService.genAccessToken(testUser)
 
         assertThat(actualToken).isEqualTo(expectedToken)
-        BDDMockito.then(authTokenService).should(BDDMockito.times(1)).genAccessToken(testUser)
+        BDDMockito.then(authTokenService).should().genAccessToken(testUser)
     }
 
     @Test
@@ -264,7 +265,7 @@ internal class UserServiceTest {
         val foundUser = userService.findById(userId)
 
         assertThat(foundUser).isNotNull
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findById(userId)
+        BDDMockito.then(userRepository).should().findById(userId)
 
     }
 
@@ -279,7 +280,7 @@ internal class UserServiceTest {
 
         val updatedUser = userService.updateProfile(userId, newEmail)
 
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findById(userId)
+        BDDMockito.then(userRepository).should().findById(userId)
 
         // 메서드 호출 여부(verify) 대신 실제 객체의 필드 값이 변경되었는지(state) 확인
         assertThat(updatedUser.email).isEqualTo(newEmail)
@@ -298,7 +299,7 @@ internal class UserServiceTest {
             .isInstanceOf(ServiceException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND)
 
-        BDDMockito.then(userRepository).should(BDDMockito.times(1)).findById(userId)
+        BDDMockito.then(userRepository).should().findById(userId)
     }
 
     @Test
