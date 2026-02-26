@@ -2,6 +2,7 @@ package com.back.global.security
 
 import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.service.UserService
+import com.back.global.exception.ErrorCode
 import com.back.standard.util.Ut
 import io.jsonwebtoken.Claims
 import jakarta.servlet.http.Cookie
@@ -64,9 +65,6 @@ internal class SecurityIntegrationTest {
             get("/api/v1/user/me")
                 .header("Authorization", rawAuthorization)
         ).andDo(print())
-
-    private fun getMeWithBearerToken(accessToken: String): ResultActions =
-        getMeWithAuthorization("Bearer $accessToken")
 
     private fun getMeWithCookie(accessToken: String): ResultActions =
         mvc.perform(
@@ -162,7 +160,8 @@ internal class SecurityIntegrationTest {
         // Then
         resultActions
             .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.resultCode").value("401-2"))
+            .andExpect(jsonPath("$.resultCode")
+                .value(ErrorCode.INVALID_AUTH_HEADER.code))
     }
 
     // ============================================
@@ -196,12 +195,11 @@ internal class SecurityIntegrationTest {
         val accessToken = createAccessToken(user)
 
         // When
-        val resultActions = getMeWithBearerToken(accessToken)
+        val resultActions = getMeWithCookie(accessToken)
 
         // Then - 필터가 통과하고 SecurityContext에 인증 정보가 주입됨
-        // 상태 코드는 엔드포인트 구현에 따라 다르므로 2xx 또는 4xx 허용
-        val status = resultActions.andReturn().response.status
-        assertThat(status).isBetween(200, 499)
+        resultActions
+            .andExpect(status().isOk)
     }
 
     // ============================================
@@ -253,26 +251,6 @@ internal class SecurityIntegrationTest {
     }
 
     // ============================================
-    // 테스트 9: 쿠키에서 accessToken 추출
-    // ============================================
-    @Test
-    @DisplayName("테스트 9: 쿠키에서 accessToken 추출")
-    @Throws(Exception::class)
-    fun t9_accessTokenFromCookie() {
-        // Given
-        val user = joinTestUser(loginId = "testuser", password = "1234", email = "test@test.com")
-        val accessToken = createAccessToken(user)
-
-        // When - 쿠키로 토큰 전달
-        val resultActions = getMeWithCookie(accessToken)
-
-        // Then - 필터가 통과하고 인증 정보가 주입됨
-        // 상태 코드는 엔드포인트 구현에 따라 다르므로 2xx 또는 4xx 허용
-        val status = resultActions.andReturn().response.status
-        assertThat(status).isBetween(200, 499)
-    }
-
-    // ============================================
     // 테스트 10: 토큰 없이 API 요청 시 통과 (익명 요청)
     // ============================================
     @Test
@@ -287,7 +265,7 @@ internal class SecurityIntegrationTest {
         // Then - 필터가 통과 (permitAll이므로)
         // 상태 코드는 엔드포인트 구현에 따라 다르므로 2xx, 4xx, 5xx 모두 허용
         val status = resultActions.andReturn().response.status
-        assertThat(status).isGreaterThanOrEqualTo(200)
+        assertThat(status).isEqualTo(403)
     } // ============================================
     // 향후 추가 검증 필요 항목들
     // ============================================
