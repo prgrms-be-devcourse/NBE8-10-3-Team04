@@ -180,7 +180,7 @@ internal class SecurityIntegrationTest {
         // Then - accessToken이 유효하지 않고 apiKey도 없으므로 INVALID_API_KEY(401-5) 발생
         resultActions
             .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.resultCode").value("401-5"))
+            .andExpect(jsonPath("$.resultCode").value(ErrorCode.INVALID_API_KEY.code))
     }
 
     // ============================================
@@ -224,7 +224,7 @@ internal class SecurityIntegrationTest {
         // Then
         resultActions
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.resultCode").value("404-1"))
+            .andExpect(jsonPath("$.resultCode").value(ErrorCode.USER_NOT_FOUND.code))
     }
 
     // ============================================
@@ -247,7 +247,7 @@ internal class SecurityIntegrationTest {
         // Then - id, loginId가 없으면 401-3 (INVALID_TOKEN_CLAIM)
         resultActions
             .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.resultCode").value("401-3"))
+            .andExpect(jsonPath("$.resultCode").value(ErrorCode.INVALID_TOKEN_CLAIM.code))
     }
 
     // ============================================
@@ -264,8 +264,8 @@ internal class SecurityIntegrationTest {
 
         // Then - 필터가 통과 (permitAll이므로)
         // 상태 코드는 엔드포인트 구현에 따라 다르므로 2xx, 4xx, 5xx 모두 허용
-        val status = resultActions.andReturn().response.status
-        assertThat(status).isEqualTo(403)
+        resultActions
+            .andExpect(status().isForbidden())
     } // ============================================
     // 향후 추가 검증 필요 항목들
     // ============================================
