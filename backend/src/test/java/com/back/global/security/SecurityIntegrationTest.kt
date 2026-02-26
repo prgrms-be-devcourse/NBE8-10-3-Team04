@@ -100,7 +100,10 @@ internal class SecurityIntegrationTest {
 
         val parsedClaims: Claims? = Ut.jwt.payload(jwtSecret, token)
         assertThat(parsedClaims).isNotNull
-        assertThat(parsedClaims!!.get("id", Long::class.java)).isEqualTo(1L)
+
+        val id = parsedClaims!!.get("id", Number::class.java).toLong()
+        assertThat(id).isEqualTo(1L)
+
         assertThat(parsedClaims.get("loginId", String::class.java)).isEqualTo("testuser")
         assertThat(parsedClaims.get("email", String::class.java)).isEqualTo("test@test.com")
     }
