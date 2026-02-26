@@ -43,8 +43,12 @@ public class ItemHistoryService {
 
     @Transactional
     public void endHistory(Long itemId, LocalDate endDate) {
-        ItemHistory ongoing = itemHistoryRepository.findTopByItemIdAndEndDateIsNullOrderByStartDateDesc(itemId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.ONGOING_HISTORY_NOT_FOUND));
+        // Repository가 Optional이 아닌 객체(Nullable)를 반환하므로 null 체크로 변경
+        ItemHistory ongoing = itemHistoryRepository.findTopByItemIdAndEndDateIsNullOrderByStartDateDesc(itemId);
+
+        if (ongoing == null) {
+            throw new ServiceException(ErrorCode.ONGOING_HISTORY_NOT_FOUND);
+        }
 
         ongoing.end(endDate);
     }
