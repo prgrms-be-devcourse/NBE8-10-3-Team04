@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
 import org.mockito.BDDMockito
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -154,11 +153,11 @@ internal class UserServiceTest {
         BDDMockito.then(userRepository).should().findById(userId)
 
         // S3 서비스 삭제 메서드에 전달된 URL 리스트를 ArgumentCaptor로 포착
-        val captor: ArgumentCaptor<List<String>> = ArgumentCaptor.forClass(List::class.java) as ArgumentCaptor<List<String>>
+        val captor = argumentCaptor<List<String>>()
 
         BDDMockito.then(s3ImageService).should().deleteMultiple(captor.capture())
 
-        val capturedUrls = captor.value
+        val capturedUrls = captor.firstValue
         assertThat(capturedUrls)
             .hasSize(2)
             .containsExactlyInAnyOrder(
