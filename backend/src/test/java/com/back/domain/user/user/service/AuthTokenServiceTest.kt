@@ -13,8 +13,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.transaction.annotation.Transactional
 import java.nio.charset.StandardCharsets
-import java.util.*
-import java.util.Map
+import java.util.Date
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -35,53 +34,52 @@ internal class AuthTokenServiceTest {
     @Test
     @DisplayName("genAccessToken(): 생성된 토큰의 페이로드가 정상적으로 파싱")
     fun genAccessToken_verify_payload() {
-        val user = User("testUser", "encodedPassword", "test@example.com")
-        ReflectionTestUtils.setField(user, "_id", 123L)
+        val payload = requireNotNull(
+            payloadOf(
+                user = User("testUser", "encodedPassword", "test@example.com"),
+                id = 123L
+            )
+        )
 
-        val accessToken = authTokenService.genAccessToken(user)
-        val payload = authTokenService.payload(accessToken)
-
-        assertThat(payload).isNotNull
-        assertThat((payload!!["id"] as Number).toLong()).isEqualTo(123L)
-        assertThat(payload["loginId"]).isEqualTo("testUser")
-        assertThat(payload["email"]).isEqualTo("test@example.com")
-        assertThat((payload["tokenVersion"] as Number).toLong()).isEqualTo(0L)
+        payload.assertClaims(
+            id = 123L,
+            loginId = "testUser",
+            email = "test@example.com",
+            tokenVersion = 0L
+        )
     }
 
     @Test
     @DisplayName("payload(): 모든 클레임(id, loginId, email, version)을 정확히 추출")
     fun payload_extracts_all_claims() {
-        val expectedId = 456L
-        val expectedLoginId = "payloadTestUser"
+        val user = User("payloadTestUser", "password123", "payload@test.com").apply {
+            ReflectionTestUtils.setField(this, "_id", 456L)
+            repeat(3) { increaseTokenVersion() }
+        }
 
-        val user = User(expectedLoginId, "password123", "payload@test.com")
-        ReflectionTestUtils.setField(user, "_id", expectedId)
+        val payload = requireNotNull(
+            authTokenService.payload(authTokenService.genAccessToken(user))
+        )
 
-        repeat(3) { user.increaseTokenVersion() }
-
-        val accessToken = authTokenService.genAccessToken(user)
-        val payload = authTokenService.payload(accessToken)
-
-        assertThat(payload).isNotNull()
-        assertThat((payload!!["id"] as Number).toLong()).isEqualTo(expectedId)
-        assertThat(payload["loginId"]).isEqualTo(expectedLoginId)
-        assertThat((payload["tokenVersion"] as Number).toLong()).isEqualTo(3L)
+        payload.assertClaims(
+            id = 456L,
+            loginId = "payloadTestUser",
+            email = "payload@test.com",
+            tokenVersion = 3L
+        )
         assertThat(payload).hasSize(4)
     }
 
     @Test
     @DisplayName("payload(): 형식이 잘못된 토큰은 null을 반환")
     fun payload_returns_null_for_malformed_token() {
-        val invalidToken = "invalid.jwt.token"
-        val payload = authTokenService.payload(invalidToken)
-        assertThat(payload).isNull()
+        assertThat(authTokenService.payload("invalid.jwt.token")).isNull()
     }
 
     @Test
     @DisplayName("payload(): 만료된 토큰은 null을 반환")
     fun payload_returns_null_for_expired_token() {
-        val keyBytes = jwtSecretKey.toByteArray(StandardCharsets.UTF_8)
-        val secretKey = Keys.hmacShaKeyFor(keyBytes)
+        val secretKey = Keys.hmacShaKeyFor(jwtSecretKey.toByteArray(StandardCharsets.UTF_8))
 
         val expiredToken = Jwts.builder()
             .claims(mapOf("id" to 999L))
@@ -90,63 +88,50 @@ internal class AuthTokenServiceTest {
             .signWith(secretKey)
             .compact()
 
-        val payload = authTokenService.payload(expiredToken)
-        assertThat(payload).isNull()
+        assertThat(authTokenService.payload(expiredToken)).isNull()
     }
 
     @Test
     @DisplayName("payload(): 서명이 다른(위조된) 토큰은 null을 반환")
     fun payload_returns_null_for_wrong_signature() {
-        val wrongKeyStr = jwtSecretKey + "fake"
-        val secretKey = Keys.hmacShaKeyFor(wrongKeyStr.toByteArray(StandardCharsets.UTF_8))
+        val wrongKey = (jwtSecretKey + "fake").toByteArray(StandardCharsets.UTF_8)
+        val secretKey = Keys.hmacShaKeyFor(wrongKey)
 
         val wrongSignedToken = Jwts.builder()
             .claims(mapOf("id" to 777L))
             .signWith(secretKey)
             .compact()
 
-        val payload= authTokenService.payload(wrongSignedToken)
-        assertThat(payload).isNull()
+        assertThat(authTokenService.payload(wrongSignedToken)).isNull()
     }
 
     @Test
     @DisplayName("payload(): 숫자 타입(ID, Version)은 Long 값으로 정확히 비교")
     fun payload_handles_number_types_correctly() {
-        val user = User("numberTestUser", "password", "number@test.com")
-        ReflectionTestUtils.setField(user, "_id", 999999999L)
+        val user = User("numberTestUser", "password", "number@test.com").apply {
+            ReflectionTestUtils.setField(this, "_id", 999_999_999L)
+            repeat(5) { increaseTokenVersion() }
+        }
 
-        repeat(5) { user.increaseTokenVersion() }
+        val payload = requireNotNull(
+            authTokenService.payload(authTokenService.genAccessToken(user))
+        )
 
-        val accessToken = authTokenService.genAccessToken(user)
-        val payload = authTokenService.payload(accessToken)
-
-        assertThat(payload).isNotNull
-
-        val idValue = payload!!["id"]
-        assertThat(idValue).isInstanceOf(Number::class.java)
-        assertThat((idValue as Number).toLong()).isEqualTo(999999999L)
-
-        val tokenVersionValue = payload["tokenVersion"]
-        assertThat((tokenVersionValue as Number).toLong()).isEqualTo(5L)
+        assertThat(payload.long("id")).isEqualTo(999_999_999L)
+        assertThat(payload.long("tokenVersion")).isEqualTo(5L)
     }
 
     @Test
     @DisplayName("통합 테스트: 서로 다른 사용자의 토큰은 서로 다른 값을 가져야 함")
     fun integration_multiple_users() {
-        val user1 = User("u1", "p1", "u1@test.com")
-        val user2 = User("u2", "p2", "u2@test.com")
+        val p1 = requireNotNull(payloadOf(User("u1", "p1", "u1@test.com"), id = 100L))
+        val p2 = requireNotNull(payloadOf(User("u2", "p2", "u2@test.com"), id = 200L))
 
-        ReflectionTestUtils.setField(user1, "_id", 100L)
-        ReflectionTestUtils.setField(user2, "_id", 200L)
+        val token1 = authTokenService.genAccessToken(User("u1", "p1", "u1@test.com").withId(100L))
+        val token2 = authTokenService.genAccessToken(User("u2", "p2", "u2@test.com").withId(200L))
 
-        val token1 = authTokenService.genAccessToken(user1)
-        val token2 = authTokenService.genAccessToken(user2)
-
-        val p1 = authTokenService.payload(token1)
-        val p2 = authTokenService.payload(token2)
-
-        assertThat((p1!!["id"] as Number).toLong()).isEqualTo(100L)
-        assertThat((p2!!["id"] as Number).toLong()).isEqualTo(200L)
+        assertThat(p1.long("id")).isEqualTo(100L)
+        assertThat(p2.long("id")).isEqualTo(200L)
         assertThat(token1).isNotEqualTo(token2)
     }
 
@@ -154,5 +139,33 @@ internal class AuthTokenServiceTest {
     @DisplayName("payload(): 빈 문자열 토큰은 null을 반환")
     fun payload_returns_null_for_empty_string() {
         assertThat(authTokenService.payload("")).isNull()
+    }
+
+    // ---------- helpers ----------
+
+    private fun payloadOf(user: User, id: Long): Map<String, Any?>? {
+        user.withId(id)
+        val token = authTokenService.genAccessToken(user)
+        return authTokenService.payload(token)
+    }
+
+    private fun User.withId(id: Long): User = apply {
+        ReflectionTestUtils.setField(this, "_id", id)
+    }
+
+    //Long으로 전환
+    private fun Map<String, Any?>.long(key: String): Long =
+        (this[key] as Number).toLong()
+
+    private fun Map<String, Any?>.assertClaims(
+        id: Long,
+        loginId: String,
+        email: String,
+        tokenVersion: Long,
+    ) {
+        assertThat(long("id")).isEqualTo(id)
+        assertThat(this["loginId"]).isEqualTo(loginId)
+        assertThat(this["email"]).isEqualTo(email)
+        assertThat(long("tokenVersion")).isEqualTo(tokenVersion)
     }
 }
