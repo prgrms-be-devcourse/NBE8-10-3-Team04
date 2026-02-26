@@ -1,13 +1,15 @@
 package com.back.domain.item.itemHistory.dto
 
+import com.back.global.exception.ErrorCode
+import com.back.global.exception.ServiceException
 import com.back.domain.item.itemHistory.entity.ItemHistory
 import java.time.LocalDate
 
 data class ItemAllHistoryResponse(
-    val id: Long,
-    @JvmField val itemId: Long,
-    @JvmField val itemName: String,
-    @JvmField val categoryName: String,
+    val id: Long?,
+    @JvmField val itemId: Long?,
+    @JvmField val itemName: String?,
+    @JvmField val categoryName: String?,
     @JvmField val imgUrl: String?,
     @JvmField val startDate: LocalDate?,
     @JvmField val endDate: LocalDate?
@@ -21,14 +23,21 @@ data class ItemAllHistoryResponse(
          */
         @JvmStatic
         fun from(itemHistory: ItemHistory): ItemAllHistoryResponse {
+
+            //엘비스 연산자를 사용하여 null일 경우 ServiceException을 보냄
+            val validItem = itemHistory.item ?: throw ServiceException(
+                ErrorCode.INVALID_INPUT_VALUE,
+                "ItemHistory(${itemHistory.id})에 아이템 정보가 없습니다."
+            )
+
             return ItemAllHistoryResponse(
-                id = itemHistory.id!!,
-                itemId = itemHistory.item?.id!!,
-                itemName = itemHistory.item?.name!!,
+                id = itemHistory.id,
+                itemId = validItem.id,
+                itemName = validItem.name,
 
-                categoryName = itemHistory.item?.category?.name!!,
+                categoryName = validItem.category?.name,
 
-                imgUrl = itemHistory.item?.imgUrl,
+                imgUrl = validItem.imgUrl,
                 startDate = itemHistory.startDate,
                 endDate = itemHistory.endDate
             )
