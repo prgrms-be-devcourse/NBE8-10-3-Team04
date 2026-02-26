@@ -7,9 +7,9 @@ import java.time.LocalDate
 
 data class ItemAllHistoryResponse(
     val id: Long?,
-    @JvmField val itemId: Long?,
-    @JvmField val itemName: String?,
-    @JvmField val categoryName: String?,
+    @JvmField val itemId: Long,
+    @JvmField val itemName: String,
+    @JvmField val categoryName: String,
     @JvmField val imgUrl: String?,
     @JvmField val startDate: LocalDate?,
     @JvmField val endDate: LocalDate?
@@ -26,17 +26,15 @@ data class ItemAllHistoryResponse(
 
             //엘비스 연산자를 사용하여 null일 경우 ServiceException을 보냄
             val validItem = itemHistory.item ?: throw ServiceException(
-                ErrorCode.INVALID_INPUT_VALUE,
+                ErrorCode.DATA_NOT_FOUND,
                 "ItemHistory(${itemHistory.id})에 아이템 정보가 없습니다."
             )
 
             return ItemAllHistoryResponse(
                 id = itemHistory.id,
-                itemId = validItem.id,
-                itemName = validItem.name,
-
-                categoryName = validItem.category?.name,
-
+                itemId = validItem.id!!,
+                itemName = validItem.name!!,
+                categoryName = validItem.category?.name!!,
                 imgUrl = validItem.imgUrl,
                 startDate = itemHistory.startDate,
                 endDate = itemHistory.endDate
