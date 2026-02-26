@@ -1,7 +1,6 @@
 package com.back.domain.user.user.controller
 
 import com.back.domain.user.user.dto.*
-import com.back.domain.user.user.dto.UserLoginResponse.Companion.of
 import com.back.domain.user.user.service.UserService
 import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
@@ -10,7 +9,6 @@ import com.back.global.rsData.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import lombok.RequiredArgsConstructor
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 
@@ -23,7 +21,6 @@ class ApiV1UserController(
 ) {
 
     @PostMapping("/signup")
-    @Transactional
     @Operation(summary = "회원가입")
     fun join(@Valid @RequestBody request: UserJoinRequest): RsData<UserDto> {
         // BindingResult 제거 - GlobalExceptionHandler가 자동으로 처리
@@ -44,7 +41,6 @@ class ApiV1UserController(
     }
 
     @PostMapping("/login")
-    @Transactional(readOnly = true)
     @Operation(summary = "로그인")
     fun login(
         @Valid @RequestBody reqBody: UserLoginRequest
@@ -69,10 +65,9 @@ class ApiV1UserController(
     @DeleteMapping("/me")
     @Operation(summary = "탈퇴")
     fun deleteMe(): RsData<UserDto> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
-        userService.deleteById(actor.id!!)
+        userService.deleteById(actor.id)
         rq.setCookie("accessToken", "")
 
         return RsData(
@@ -84,17 +79,14 @@ class ApiV1UserController(
 
     @GetMapping("/me")
     @Operation(summary = "내 정보 조회")
-    fun me(): RsData<UserDto> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
-
-        // UserDto는 이미 필요한 정보를 포함하고 있으므로 그대로 반환
-        return RsData(
-            "200-1",
-            "${actor.loginId}님의 정보입니다.",
-            actor
-        )
-    }
+    fun me(): RsData<UserDto> =
+        rq.requireActor().let { actor ->
+            RsData(
+                "200-1",
+                "${actor.loginId}님의 정보입니다.",
+                actor
+            )
+        }
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃")
@@ -113,8 +105,7 @@ class ApiV1UserController(
     fun updateProfile(
         @Valid @RequestBody request: UserProfileUpdateRequest
     ): RsData<UserUpdateResponse> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         val updatedUser = userService.updateProfile(actor.id, request.email)
 
@@ -135,8 +126,7 @@ class ApiV1UserController(
     fun changePassword(
         @Valid @RequestBody request: PasswordChangeRequest
     ): RsData<UserUpdateResponse> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         val updatedUser = userService.changePassword(
             actor.id,
@@ -161,8 +151,7 @@ class ApiV1UserController(
     fun verifyPassword(
         @Valid  @RequestBody request: PasswordVerifyRequest
     ): RsData<Void> {
-        val actor = rq.actor
-            ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
+        val actor = rq.requireActor()
 
         val user = userService.findById(actor.id)
             ?: throw ServiceException(ErrorCode.USER_NOT_FOUND)

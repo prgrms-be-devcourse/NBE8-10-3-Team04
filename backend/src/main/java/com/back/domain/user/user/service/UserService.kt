@@ -5,10 +5,9 @@ import com.back.domain.user.user.repository.UserRepository
 import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import com.back.global.s3.S3ImageService
-import jakarta.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
-import lombok.RequiredArgsConstructor
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.*
@@ -21,8 +20,10 @@ class UserService(
     private val s3ImageService: S3ImageService,
 ) {
 
+    @Transactional(readOnly = true)
     fun count(): Long = userRepository.count()
 
+    @Transactional
     fun join(loginId: String, password: String, email: String): User {
         if (userRepository.findByLoginId(loginId) != null) {
             throw ServiceException(ErrorCode.DUPLICATE_LOGIN_ID)
@@ -33,6 +34,7 @@ class UserService(
         return userRepository.save(user)
     }
 
+    @Transactional(readOnly = true)
     fun findByLoginId(loginId: String) = userRepository.findByLoginId(loginId)
 
 
@@ -51,16 +53,20 @@ class UserService(
         userRepository.deleteById(id)
     }
 
+    @Transactional
     fun checkPassword(user: User, password: String) {
         if (!passwordEncoder.matches(password, user.password)) {
             throw ServiceException(ErrorCode.INVALID_PASSWORD)
         }
     }
 
+    @Transactional(readOnly = true)
     fun findByApiKey(apiKey: String) = userRepository.findByApiKey(apiKey)
 
+    @Transactional
     fun genAccessToken(user: User): String = authTokenService.genAccessToken(user)
 
+    @Transactional(readOnly = true)
     fun findById(id: Long): User? =
         userRepository.findById(id).orElse(null)
 

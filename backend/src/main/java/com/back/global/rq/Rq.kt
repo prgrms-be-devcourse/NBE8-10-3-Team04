@@ -91,4 +91,7 @@ class Rq(
 
     val member: User?
         get() = userService.findById(memberId)
+
+    fun requireActor(): UserDto =
+        actor ?: throw ServiceException(ErrorCode.LOGIN_REQUIRED)
 }
