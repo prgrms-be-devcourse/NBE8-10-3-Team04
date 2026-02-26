@@ -1,8 +1,10 @@
 package com.back.global.security
 
+import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.service.UserService
 import com.back.standard.util.Ut
 import io.jsonwebtoken.Claims
+import io.jsonwebtoken.Jwts.claims
 import jakarta.servlet.http.Cookie
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -41,6 +43,40 @@ internal class SecurityIntegrationTest {
 
     @Value("\${custom.accessToken.expirationSeconds}")
     private var accessTokenExpirationSeconds: Int = 0
+
+    private fun joinTestUser(
+        loginId: String = "testuser",
+        password: String = "1234",
+        email: String = "test@test.com"
+    ): User = userService.join(loginId, password, email)
+
+    private fun createAccessToken(claims: Map<String, Any>): String =
+        Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims)
+
+    private fun createAccessToken(user: User): String =
+        createAccessToken(
+            mapOf(
+                "id" to user.id,
+                "loginId" to user.loginId,
+                "email" to (user.email ?: ""),
+                "tokenVersion" to user.tokenVersion
+            )
+        )
+
+    private fun getMeWithAuthorization(rawAuthorization: String): ResultActions =
+        mvc.perform(
+            get("/api/v1/user/me")
+                .header("Authorization", rawAuthorization)
+        ).andDo(print())
+
+    private fun getMeWithBearerToken(accessToken: String): ResultActions =
+        getMeWithAuthorization("Bearer $accessToken")
+
+    private fun getMeWithCookie(accessToken: String): ResultActions =
+        mvc.perform(
+            get("/api/v1/user/me")
+                .cookie(Cookie("accessToken", accessToken))
+        ).andDo(print())
 
     // ============================================
     // 테스트 1: JWT 토큰 생성 및 검증
@@ -91,7 +127,7 @@ internal class SecurityIntegrationTest {
     @Throws(Exception::class)
     fun t3_publicEndpointAccessWithoutToken() {
         // Given
-        userService.join("testuser", "1234", "test@test.com")
+        joinTestUser(loginId = "testuser", password = "1234", email = "test@test.com")
 
         // When
         val resultActions: ResultActions = mvc.perform(
@@ -122,10 +158,7 @@ internal class SecurityIntegrationTest {
         val invalidAuthHeader = "InvalidFormat token123"
 
         // When
-        val resultActions = mvc.perform(
-            get("/api/v1/user/me")
-                .header("Authorization", invalidAuthHeader)
-        ).andDo(print())
+        val resultActions = getMeWithAuthorization(invalidAuthHeader)
 
         // Then
         resultActions
@@ -144,16 +177,12 @@ internal class SecurityIntegrationTest {
         val invalidToken = "Bearer invalid.jwt.token"
 
         // When
-        val resultActions = mvc!!.perform(
-            MockMvcRequestBuilders.get("/api/v1/user/me")
-                .header("Authorization", invalidToken)
-        )
-            .andDo(MockMvcResultHandlers.print())
+        val resultActions = getMeWithAuthorization(invalidToken)
 
         // Then - accessToken이 유효하지 않고 apiKey도 없으므로 INVALID_API_KEY(401-5) 발생
         resultActions
-            .andExpect(MockMvcResultMatchers.status().isUnauthorized())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.resultCode").value("401-5"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.resultCode").value("401-5"))
     }
 
     // ============================================
@@ -165,21 +194,10 @@ internal class SecurityIntegrationTest {
     fun t6_validJwtTokenAuthenticationSuccess() {
         // Given
         val user = userService.join("testuser", "1234", "test@test.com")
-
-        val claims: Map<String, Any> = mapOf(
-            "id" to user.id,
-            "loginId" to user.loginId,
-            "email" to (user.email ?: ""),
-            "tokenVersion" to user.tokenVersion
-        )
-
-        val accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims)
+        val accessToken = createAccessToken(user)
 
         // When
-        val resultActions = mvc.perform(
-            get("/api/v1/user/me")
-                .header("Authorization", "Bearer $accessToken")
-        ).andDo(print())
+        val resultActions = getMeWithBearerToken(accessToken)
 
         // Then - 필터가 통과하고 SecurityContext에 인증 정보가 주입됨
         // 상태 코드는 엔드포인트 구현에 따라 다르므로 2xx 또는 4xx 허용
@@ -201,14 +219,10 @@ internal class SecurityIntegrationTest {
             "email" to "nonexistent@test.com",
             "tokenVersion" to 0L
         )
-
-        val accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims)
+        val accessToken = createAccessToken(claims)
 
         // When - 쿠키 방식으로 토큰 전달 (Authorization 헤더는 Bearer {apiKey} {accessToken} 형식이라서)
-        val resultActions = mvc.perform(
-            get("/api/v1/user/me")
-                .cookie(Cookie("accessToken", accessToken))
-        ).andDo(print())
+        val resultActions = getMeWithCookie(accessToken)
 
         // Then
         resultActions
@@ -228,14 +242,10 @@ internal class SecurityIntegrationTest {
             "email" to "test@test.com",
             "tokenVersion" to 0L      // id, loginId 누락
         )
-
-        val token = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, invalidClaims)
+        val token = createAccessToken(invalidClaims)
 
         // When - 쿠키 방식으로 토큰 전달
-        val resultActions = mvc.perform(
-            get("/api/v1/user/me")
-                .cookie(Cookie("accessToken", token))
-        ).andDo(print())
+        val resultActions = getMeWithCookie(token)
 
         // Then - id, loginId가 없으면 401-3 (INVALID_TOKEN_CLAIM)
         resultActions
@@ -251,22 +261,11 @@ internal class SecurityIntegrationTest {
     @Throws(Exception::class)
     fun t9_accessTokenFromCookie() {
         // Given
-        val user = userService.join("testuser", "1234", "test@test.com")
-
-        val claims: Map<String, Any> = mapOf(
-            "id" to user.id,
-            "loginId" to user.loginId,
-            "email" to (user.email ?: ""),
-            "tokenVersion" to user.tokenVersion
-        )
-
-        val accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims)
+        val user = joinTestUser(loginId = "testuser", password = "1234", email = "test@test.com")
+        val accessToken = createAccessToken(user)
 
         // When - 쿠키로 토큰 전달
-        val resultActions = mvc.perform(
-            get("/api/v1/user/me")
-                .cookie(Cookie("accessToken", accessToken))
-        ).andDo(print())
+        val resultActions = getMeWithCookie(accessToken)
 
         // Then - 필터가 통과하고 인증 정보가 주입됨
         // 상태 코드는 엔드포인트 구현에 따라 다르므로 2xx 또는 4xx 허용
