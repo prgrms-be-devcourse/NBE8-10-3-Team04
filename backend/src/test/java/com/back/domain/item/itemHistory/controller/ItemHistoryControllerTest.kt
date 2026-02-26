@@ -45,6 +45,7 @@ internal class ItemHistoryControllerTest {
 
     private lateinit var user: User
     private lateinit var item: Item
+    private lateinit var authCookie: Cookie
 
     // 로그인 후 인증 쿠키를 발급받는 헬퍼 메서드
     private fun loginAndGetCookie(loginId: String, password: String): Cookie {
@@ -64,7 +65,7 @@ internal class ItemHistoryControllerTest {
     }
 
     // 다른 유저 및 해당 유저의 아이템 생성 헬퍼 메서드
-    private fun createOtherUserAndItemWithHistory(
+    private fun createOtherUserAndItem(
         loginId: String,
         email: String,
         categoryName: String,
@@ -91,6 +92,8 @@ internal class ItemHistoryControllerTest {
     @BeforeEach
     fun setUp() {
         user = userService.join("historyUser", "1234", "history@test.com")
+        //테스트에서 공통으로 사용하는 쿠키 세팅
+        authCookie = loginAndGetCookie("historyUser", "1234")
         val category = categoryRepository.save(Category("칫솔"))
 
         item = itemRepository.save(
@@ -110,11 +113,9 @@ internal class ItemHistoryControllerTest {
     @Test
     @DisplayName("전체 이력 조회 - 성공: 이력이 없어도 빈 배열로 응답")
     fun getAllHistories_empty() {
-        val cookie = loginAndGetCookie("historyUser", "1234")
-
         // 이력이 없는 상태에서 전체 조회 요청 시 200 OK와 빈 배열 반환 검증
         mvc.get("/api/v1/items/histories") {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
@@ -130,11 +131,10 @@ internal class ItemHistoryControllerTest {
     fun getAllHistories_withData() {
         // 아이템 이력 생성
         itemHistoryService.createItemHistory(item)
-        val cookie = loginAndGetCookie("historyUser", "1234")
 
         // 조회 요청 시 생성된 이력 데이터가 올바르게 반환되는지 검증
         mvc.get("/api/v1/items/histories") {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
@@ -150,7 +150,7 @@ internal class ItemHistoryControllerTest {
     @DisplayName("전체 이력 조회 - 성공: 다른 유저의 이력은 포함되지 않는다")
     fun getAllHistories_isolatedByUser() {
         // 다른 유저 및 해당 유저의 아이템 생성
-        val otherItem = createOtherUserAndItemWithHistory(
+        val otherItem = createOtherUserAndItem(
             loginId = "otherUser",
             email = "other@test.com",
             categoryName = "기타 카테고리",
@@ -161,11 +161,9 @@ internal class ItemHistoryControllerTest {
         // 내 아이템 이력 생성
         itemHistoryService.createItemHistory(item)
 
-        val cookie = loginAndGetCookie("historyUser", "1234")
-
         // 내 이력만 조회되고 다른 유저의 이력은 포함되지 않는지 검증 (데이터 격리)
         mvc.get("/api/v1/items/histories") {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
@@ -187,11 +185,9 @@ internal class ItemHistoryControllerTest {
     @Test
     @DisplayName("특정 아이템 이력 조회 - 성공: 이력이 없으면 빈 배열 반환")
     fun getItemHistories_empty() {
-        val cookie = loginAndGetCookie("historyUser", "1234")
-
         // 특정 아이템 ID로 조회했으나 이력이 없을 경우 빈 배열 반환 검증
         mvc.get("/api/v1/items/{itemId}/histories", item.id) {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
@@ -206,11 +202,10 @@ internal class ItemHistoryControllerTest {
     fun getItemHistories_withData() {
         // 이력 생성
         itemHistoryService.createItemHistory(item)
-        val cookie = loginAndGetCookie("historyUser", "1234")
 
         // 특정 아이템 조회 시 이력 정보가 올바르게 매핑되는지 검증
         mvc.get("/api/v1/items/{itemId}/histories", item.id) {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
@@ -228,11 +223,9 @@ internal class ItemHistoryControllerTest {
         itemHistoryService.createItemHistory(item)
         itemHistoryService.createItemHistory(item)
 
-        val cookie = loginAndGetCookie("historyUser", "1234")
-
         // 2개의 데이터가 반환되는지 확인 (내림차순 정렬 로직은 Service 테스트에서 상세 검증)
         mvc.get("/api/v1/items/{itemId}/histories", item.id) {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
@@ -244,11 +237,9 @@ internal class ItemHistoryControllerTest {
     @Test
     @DisplayName("특정 아이템 이력 조회 - 실패: 존재하지 않는 itemId이면 404 예외 발생")
     fun getItemHistories_notExistItem() {
-        val cookie = loginAndGetCookie("historyUser", "1234")
-
         // DB에 없는 ID 조회 시 404 Not Found 에러 발생 검증
         mvc.get("/api/v1/items/{itemId}/histories", 999999L) {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
@@ -261,7 +252,7 @@ internal class ItemHistoryControllerTest {
     @DisplayName("특정 아이템 이력 조회 - 실패: 다른 유저의 아이템을 조회하면 404/403 예외 발생 (데이터 격리)")
     fun getItemHistories_otherUserItem() {
         // 다른 유저와 그의 아이템 및 이력 생성
-        val otherItem = createOtherUserAndItemWithHistory(
+        val otherItem = createOtherUserAndItem(
             loginId = "otherUser",
             email = "other@test.com",
             categoryName = "기타",
@@ -269,11 +260,9 @@ internal class ItemHistoryControllerTest {
         )
         itemHistoryService.createItemHistory(otherItem)
 
-        val cookie = loginAndGetCookie("historyUser", "1234")
-
         // 내 계정으로 남의 아이템 이력을 조회 시도 시 예외(404 Not Found 등) 발생 검증
         mvc.get("/api/v1/items/{itemId}/histories", otherItem.id) {
-            cookie(cookie)
+            cookie(authCookie)
         }.andDo {
             print()
         }.andExpect {
