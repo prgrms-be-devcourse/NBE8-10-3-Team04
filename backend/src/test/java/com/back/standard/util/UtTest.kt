@@ -7,13 +7,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
-@SpringBootTest
-@ActiveProfiles("test")
+// @SpringBootTest 및 @ActiveProfiles("test") 어노테이션 제거
+@DisplayName("Ut 유틸리티 테스트")
 internal class UtTest {
 
-    // lateinit var를 사용하여 불필요한 nullable 타입 및 !! 단언 연산자 제거
-    @Value("\${custom.jwt.secretKey}")
-    private lateinit var SECRET: String
+    // @Value를 통한 주입 대신, 테스트용 상수 문자열을 직접 정의하여 속도 개선
+    // (HMAC-SHA 알고리즘의 길이 요구사항을 만족하기 위해 32바이트 이상으로 설정)
+    private val SECRET = "this-is-a-very-long-test-secret-key-for-jwt-32bytes"
 
     @Test
     @DisplayName("JWT 토큰 생성 테스트")
