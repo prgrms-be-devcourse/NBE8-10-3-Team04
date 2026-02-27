@@ -10,21 +10,20 @@ import java.time.temporal.ChronoUnit
 class ItemHistory(
 
     @ManyToOne(fetch = FetchType.LAZY)
-    var item: Item?,
+    @JoinColumn(name = "item_id", nullable = false)
+    var item: Item, // Non-null 변경
 
-    var startDate: LocalDate?,
+    @Column(nullable = false)
+    var startDate: LocalDate, // Non-null로 변경
 
-    var endDate: LocalDate?
+    var endDate: LocalDate? // 종료일은 null일 수 있으므로 Nullable 유지
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
 
-    constructor() : this(
-        item = null,
-        startDate = LocalDate.now(),
-        endDate = null
-    )
+    //  JPA용 빈 생성자는 플러그인이 알아서 만들어주므로 완전히 삭제
+
     constructor(item: Item) : this(
         item = item,
         startDate = item.startDate,
@@ -37,7 +36,8 @@ class ItemHistory(
 
     val usedDays: Long?
         get() {
-            if (endDate == null || startDate == null) return null
+            // startDate가 Non-null이 되었으므로 endDate만 null 체크
+            if (endDate == null) return null
             val days = ChronoUnit.DAYS.between(startDate, endDate)
             return maxOf(days, 0)
         }

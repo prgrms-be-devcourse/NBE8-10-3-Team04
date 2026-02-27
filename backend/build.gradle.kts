@@ -5,6 +5,8 @@ plugins {
     id("jacoco") // 코드 커버리지 측정
     kotlin("jvm") version "2.2.21"
     kotlin("plugin.spring") version "2.2.21"
+    kotlin("plugin.jpa") version "2.2.21"
+
 }
 
 group = "com"
