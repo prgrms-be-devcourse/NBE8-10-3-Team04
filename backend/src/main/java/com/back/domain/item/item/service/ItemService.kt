@@ -269,12 +269,8 @@ class ItemService(
             }
         }
 
-        // 프론트에서 보낸 URL
-        if (!providedUrl.isNullOrBlank()) {
-            return providedUrl
-        }
-
-        // 기존 URL 유지 (수정 시), 없으면 빈 문자열
-        return if (!existingUrl.isNullOrBlank()) existingUrl else ""
+        // 2 & 3. 제공된 URL 확인 -> 없으면 기존 URL 확인 -> 모두 없으면 null
+        return providedUrl?.takeIf { it.isNotBlank() }
+            ?: existingUrl?.takeIf { it.isNotBlank() }
     }
 }
