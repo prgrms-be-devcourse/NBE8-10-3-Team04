@@ -2,6 +2,8 @@ package com.back.domain.email.scheduler
 
 import com.back.domain.email.service.EmailService
 import com.back.domain.item.item.repository.ItemRepository
+import com.back.global.exception.ErrorCode
+import com.back.global.exception.ServiceException
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -28,8 +30,9 @@ class DdayEmailScheduler(
         val itemsDueToday = itemRepository.findAllByNextReplacementDateAndIsActive(today, true)
 
         for (item in itemsDueToday) {
-            val member = item.user // // 아이템과 연관된 사용자 조회
-            emailService.sendDDayNotification(member!!.email, item) // // D-Day 알림 이메일 발송
+            val member = item.user
+                ?: throw ServiceException(ErrorCode.DATA_NOT_FOUND, "아이템 사용자 정보가 없습니다. itemId=${item.id}")
+            emailService.sendDDayNotification(member.email, item)
         }
     }
 }
