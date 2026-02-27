@@ -25,13 +25,13 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.lenient
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.springframework.web.multipart.MultipartFile
 import tools.jackson.databind.ObjectMapper
 import java.io.IOException
@@ -174,14 +174,17 @@ internal class ItemServiceTest {
     fun createItem_Success() {
         given(userService.findById(1L)).willReturn(testUser)
         given(categoryRepository.findById(1L)).willReturn(Optional.of(testCategory))
-        given(itemRepository.save(safeAny(Item::class.java))).willReturn(testItem)
-        doNothing().`when`(itemHistoryService).createItemHistory(safeAny(Item::class.java))
+
+        // safeAny(Item::class.java) 대신 mockito-kotlin의 any() 적용
+        given(itemRepository.save(any())).willReturn(testItem)
+        doNothing().`when`(itemHistoryService).createItemHistory(any())
 
         val result = itemService.createItem(1L, createRequest)
 
         assertThat(result.name).isEqualTo("칫솔")
-        verify(itemRepository, times(1)).save(safeAny(Item::class.java))
-        verify(itemHistoryService, times(1)).createItemHistory(safeAny(Item::class.java))
+        // verify 검증 시에도 mockito-kotlin의 any() 적용
+        verify(itemRepository, times(1)).save(any())
+        verify(itemHistoryService, times(1)).createItemHistory(any())
     }
 
     @Test
@@ -219,12 +222,15 @@ internal class ItemServiceTest {
         given(userService.findById(1L)).willReturn(testUser)
         given(categoryRepository.findById(1L)).willReturn(Optional.of(testCategory))
         given(s3ImageService.upload(mockFile)).willReturn("https://s3.amazonaws.com/uploaded-image.png")
-        given(itemRepository.save(safeAny(Item::class.java))).willReturn(testItem)
+
+        // safeAny(Item::class.java) 대신 mockito-kotlin의 any() 적용
+        given(itemRepository.save(any())).willReturn(testItem)
 
         itemService.createItem(1L, requestWithImage)
 
         verify(s3ImageService, times(1)).upload(mockFile)
-        verify(itemRepository, times(1)).save(safeAny(Item::class.java))
+        // verify 검증 시에도 mockito-kotlin의 any() 적용
+        verify(itemRepository, times(1)).save(any())
     }
 
     // == 수정 테스트 ==
@@ -255,14 +261,17 @@ internal class ItemServiceTest {
     @DisplayName("아이템 교체 성공")
     fun replaceItem_Success() {
         given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(testItem))
-        doNothing().`when`(itemHistoryService).endHistory(anyLong(), safeAny(LocalDate::class.java))
-        doNothing().`when`(itemHistoryService).createItemHistory(safeAny(Item::class.java))
+
+        // safeAny를 사용했던 부분들을 모두 mockito-kotlin의 any()로 변경
+        doNothing().`when`(itemHistoryService).endHistory(anyLong(), any())
+        doNothing().`when`(itemHistoryService).createItemHistory(any())
 
         val result = itemService.replaceItem(1L, 1L)
 
         assertThat(result.startDate).isEqualTo(LocalDate.now())
-        verify(itemHistoryService, times(1)).endHistory(anyLong(), safeAny(LocalDate::class.java))
-        verify(itemHistoryService, times(1)).createItemHistory(safeAny(Item::class.java))
+        // verify 검증 시에도 mockito-kotlin의 any() 적용
+        verify(itemHistoryService, times(1)).endHistory(anyLong(), any())
+        verify(itemHistoryService, times(1)).createItemHistory(any())
     }
 
     @Test
@@ -296,7 +305,9 @@ internal class ItemServiceTest {
     @DisplayName("아이템 삭제 성공")
     fun deleteItem_Success() {
         given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(testItem))
-        doNothing().`when`(itemRepository).delete(safeAny(Item::class.java))
+
+        // safeAny(Item::class.java) 대신 mockito-kotlin의 any() 적용
+        doNothing().`when`(itemRepository).delete(any())
 
         itemService.deleteItem(1L, 1L)
 
@@ -310,15 +321,5 @@ internal class ItemServiceTest {
 
         assertThatThrownBy { itemService.deleteItem(1L, 1L) }
             .isInstanceOf(ServiceException::class.java)
-    }
-
-    /**
-     * Kotlin 런타임의 Non-null 제약을 우회하기 위한 Mockito any() 헬퍼 함수
-     * 내부적으로 null을 리턴하되, 코틀린 컴파일러를 통과시키기 위해 캐스팅을 진행합니다.
-     */
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> safeAny(type: Class<T>): T {
-        Mockito.any(type)
-        return null as T
     }
 }
