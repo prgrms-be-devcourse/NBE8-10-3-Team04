@@ -27,7 +27,7 @@ class ItemHistoryService(
     @Transactional(readOnly = true)
     fun getItemHistories(itemId: Long, userId: Long): List<ItemHistoryResponse> {
         itemRepository.findByIdAndUserId(itemId, userId)
-            .orElseThrow { ServiceException(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION) }
+            ?: throw ServiceException(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION)
 
         val histories = itemHistoryRepository.findByItemIdOrderByStartDateDesc(itemId)
         return ItemHistoryResponse.fromList(histories)

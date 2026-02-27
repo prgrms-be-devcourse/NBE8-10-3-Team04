@@ -128,8 +128,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 ID와 사용자 ID로 조회 성공")
     fun findByIdAndUserId_Success() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(testItem))
-
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(testItem)
         val result = itemService.findByIdAndUserId(1L, 1L)
 
         assertThat(result.name).isEqualTo("칫솔")
@@ -139,8 +138,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 ID와 사용자 ID로 조회 실패 - 권한 없음")
     fun findByIdAndUserId_Failure_NoPermission() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.empty())
-
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(null)
         assertThatThrownBy { itemService.findByIdAndUserId(1L, 1L) }
             .isInstanceOf(ServiceException::class.java)
             .hasMessageContaining(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION.message)
@@ -237,7 +235,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 수정 성공")
     fun modify_Success() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(testItem))
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(testItem)
         given(categoryRepository.findById(1L)).willReturn(Optional.of(testCategory))
         doNothing().`when`(s3ImageService).delete(anyString())
 
@@ -250,7 +248,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 수정 실패 - 권한 없음")
     fun modify_Failure_NoPermission() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.empty())
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(null)
 
         assertThatThrownBy { itemService.modify(1L, 1L, updateRequest) }
             .isInstanceOf(ServiceException::class.java)
@@ -260,7 +258,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 교체 성공")
     fun replaceItem_Success() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(testItem))
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(testItem)
 
         // safeAny를 사용했던 부분들을 모두 mockito-kotlin의 any()로 변경
         doNothing().`when`(itemHistoryService).endHistory(anyLong(), any())
@@ -282,7 +280,7 @@ internal class ItemServiceTest {
             LocalDate.of(2024, 1, 1), "90d", LocalDate.of(2024, 4, 1), false
         )
 
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(inactiveItem))
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(inactiveItem)
 
         assertThatThrownBy { itemService.replaceItem(1L, 1L) }
             .isInstanceOf(ServiceException::class.java)
@@ -293,7 +291,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 활성화 토글 성공")
     fun toggleActive_Success() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(testItem))
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(testItem)
 
         val result = itemService.toggleActive(1L, 1L)
 
@@ -304,7 +302,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 삭제 성공")
     fun deleteItem_Success() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.of(testItem))
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(testItem)
 
         // safeAny(Item::class.java) 대신 mockito-kotlin의 any() 적용
         doNothing().`when`(itemRepository).delete(any())
@@ -317,7 +315,7 @@ internal class ItemServiceTest {
     @Test
     @DisplayName("아이템 삭제 실패 - 권한 없음")
     fun deleteItem_Failure_NoPermission() {
-        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(Optional.empty())
+        given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(null)
 
         assertThatThrownBy { itemService.deleteItem(1L, 1L) }
             .isInstanceOf(ServiceException::class.java)

@@ -12,8 +12,7 @@ interface ItemRepository : JpaRepository<Item, Long> {
     fun findAllByUserIdOrderByNextReplacementDateAsc(userId: Long): List<Item>
 
     // 단건조회
-    //TODO Item Service 코틀린전환후 Optional 객체로 감쌀 필요 없이 그냥 Item?을 반환하도록 변경
-    fun findByIdAndUserId(id: Long, userId: Long): Optional<Item>
+    fun findByIdAndUserId(id: Long, userId: Long): Item?
 
     // 카테고리별목록조회
     fun findAllByUserIdAndCategoryId(userId: Long, categoryId: Long): List<Item>
