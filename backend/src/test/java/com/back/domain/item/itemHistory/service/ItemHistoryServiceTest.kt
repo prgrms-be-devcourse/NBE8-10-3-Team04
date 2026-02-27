@@ -7,12 +7,14 @@ import com.back.domain.item.item.repository.ItemRepository
 import com.back.domain.item.itemHistory.repository.ItemHistoryRepository
 import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.repository.UserRepository
+import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -215,8 +217,12 @@ internal class ItemHistoryServiceTest {
     @Test
     @DisplayName("이력 종료 - 실패: 진행 중인 이력이 없으면 ServiceException 발생")
     fun endHistory_fail_noOngoing() {
-        assertThatThrownBy { itemHistoryService.endHistory(item.id!!, LocalDate.now()) }
-            .isInstanceOf(ServiceException::class.java) // 코틀린 클래스 참조 문법(::class.java)
+        val exception = assertThrows<ServiceException> {
+            itemHistoryService.endHistory(item.id!!, LocalDate.now())
+        }
+
+        // ONGOING_HISTORY_NOT_FOUND 에러 코드 검증
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.ONGOING_HISTORY_NOT_FOUND)
     }
 
     @Test
@@ -227,8 +233,12 @@ internal class ItemHistoryServiceTest {
         itemHistoryService.endHistory(item.id!!, LocalDate.of(2024, 1, 15))
 
         // 이미 종료된 상태에서 다시 종료를 시도하면 예외 발생 확인
-        assertThatThrownBy { itemHistoryService.endHistory(item.id!!, LocalDate.now()) }
-            .isInstanceOf(ServiceException::class.java)
+        val exception = assertThrows<ServiceException> {
+            itemHistoryService.endHistory(item.id!!, LocalDate.now())
+        }
+
+        // ONGOING_HISTORY_NOT_FOUND 에러 코드 검증
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.ONGOING_HISTORY_NOT_FOUND)
     }
 
     @Test
@@ -237,7 +247,11 @@ internal class ItemHistoryServiceTest {
         val stranger = userRepository.save(User("stranger", "1234", "stranger@test.com"))
 
         // 다른 유저(stranger)가 내 아이템의 이력을 조회하려 할 때 예외(권한 없음) 발생 확인
-        assertThatThrownBy { itemHistoryService.getItemHistories(item.id!!, stranger.id) }
-            .isInstanceOf(ServiceException::class.java)
+        val exception = assertThrows<ServiceException> {
+            itemHistoryService.getItemHistories(item.id!!, stranger.id)
+        }
+
+        // ITEM_NOT_FOUND_OR_NO_PERMISSION 에러 코드 검증
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION)
     }
 }
