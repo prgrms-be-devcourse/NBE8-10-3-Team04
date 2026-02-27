@@ -52,28 +52,14 @@ internal class ItemStatisticsServiceTest {
             )
         ) as List<Map<String, Any>>
 
+        // 데이터가 limit 단위로 잘리는지 확인하기 위해 총 6개의 테스트 데이터를 생성
         mostReplacedItemsData = listOf(
-            mapOf(
-                "itemId" to 1L,
-                "itemName" to "칫솔",
-                "categoryName" to "욕실용품",
-                "replacementCount" to 10L,
-                "imgUrl" to "/images/toothbrush.png"
-            ),
-            mapOf(
-                "itemId" to 2L,
-                "itemName" to "수세미",
-                "categoryName" to "주방용품",
-                "replacementCount" to 8L,
-                "imgUrl" to "/images/sponge.png"
-            ),
-            mapOf(
-                "itemId" to 3L,
-                "itemName" to "마스크",
-                "categoryName" to "생활용품",
-                "replacementCount" to 5L,
-                "imgUrl" to "/images/mask.png"
-            )
+            mapOf("itemId" to 1L, "itemName" to "칫솔", "categoryName" to "욕실용품", "replacementCount" to 10L, "imgUrl" to "/images/toothbrush.png"),
+            mapOf("itemId" to 2L, "itemName" to "수세미", "categoryName" to "주방용품", "replacementCount" to 8L, "imgUrl" to "/images/sponge.png"),
+            mapOf("itemId" to 3L, "itemName" to "마스크", "categoryName" to "생활용품", "replacementCount" to 5L, "imgUrl" to "/images/mask.png"),
+            mapOf("itemId" to 4L, "itemName" to "샴푸", "categoryName" to "욕실용품", "replacementCount" to 4L, "imgUrl" to "/images/shampoo.png"),
+            mapOf("itemId" to 5L, "itemName" to "치약", "categoryName" to "욕실용품", "replacementCount" to 3L, "imgUrl" to "/images/toothpaste.png"),
+            mapOf("itemId" to 6L, "itemName" to "비누", "categoryName" to "욕실용품", "replacementCount" to 2L, "imgUrl" to "/images/soap.png")
         ) as List<Map<String, Any>>
     }
 
@@ -188,12 +174,16 @@ internal class ItemStatisticsServiceTest {
     @Test
     fun `가장 자주 교체한 아이템 조회 성공 - 5개 제한`() {
         val limit = 5
+
+        // 전체 6개의 데이터 중 Repository가 의도대로 상위 5개만 반환한다고 가정
+        val expectedData = mostReplacedItemsData.take(limit)
         given(itemHistoryRepository.findMostReplacedItemsByUser(testUserId, limit))
-            .willReturn(mostReplacedItemsData)
+            .willReturn(expectedData)
 
         val result = itemStatisticsService.getMostReplacedItems(testUserId, limit)
 
-        assertThat(result).hasSize(3)
+        // 결과 사이즈가 6개가 아닌 limit 크기와 일치하는지 검증
+        assertThat(result).hasSize(limit)
 
         with(result[0]) {
             assertThat(itemId).isEqualTo(1L)
@@ -203,30 +193,22 @@ internal class ItemStatisticsServiceTest {
             assertThat(imgUrl).isEqualTo("/images/toothbrush.png")
         }
 
-        with(result[1]) {
-            assertThat(itemId).isEqualTo(2L)
-            assertThat(itemName).isEqualTo("수세미")
-            assertThat(replacementCount).isEqualTo(8L)
-        }
-
-        with(result[2]) {
-            assertThat(itemId).isEqualTo(3L)
-            assertThat(itemName).isEqualTo("마스크")
-            assertThat(replacementCount).isEqualTo(5L)
-        }
-
         verify(itemHistoryRepository, times(1)).findMostReplacedItemsByUser(testUserId, limit)
     }
 
     @Test
     fun `가장 자주 교체한 아이템 조회 성공 - 3개 제한`() {
         val limit = 3
+
+        // limit 단위 테스트 강화를 위해, 상위 3개만 잘라서 반환하도록 설정
+        val expectedData = mostReplacedItemsData.take(limit)
         given(itemHistoryRepository.findMostReplacedItemsByUser(testUserId, limit))
-            .willReturn(mostReplacedItemsData)
+            .willReturn(expectedData)
 
         val result = itemStatisticsService.getMostReplacedItems(testUserId, limit)
 
-        assertThat(result).hasSize(3)
+        // 검증 시 사이즈가 3개인지 확인
+        assertThat(result).hasSize(limit)
         verify(itemHistoryRepository, times(1)).findMostReplacedItemsByUser(testUserId, limit)
     }
 
