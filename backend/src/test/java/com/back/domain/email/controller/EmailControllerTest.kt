@@ -9,9 +9,10 @@ import com.back.domain.user.user.repository.UserRepository
 import com.back.domain.user.user.service.UserService
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -64,7 +66,7 @@ internal class EmailControllerTest {
         val itemId = item.id ?: error("item id is null")
 
         doReturn(itemUser.email)
-            .`when`(emailService)
+            .whenever(emailService)
             .sendDDayNotification(itemUser.email, item)
 
         mvc.perform(post("/api/v1/email/test/dday/{itemId}", itemId)
