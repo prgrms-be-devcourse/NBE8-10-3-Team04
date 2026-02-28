@@ -53,7 +53,7 @@ internal class AuthTokenServiceTest {
     @DisplayName("payload(): 모든 클레임(id, loginId, email, version)을 정확히 추출")
     fun payload_extracts_all_claims() {
         val user = User("payloadTestUser", "password123", "payload@test.com").apply {
-            ReflectionTestUtils.setField(this, "_id", 456L)
+            ReflectionTestUtils.setField(this, "id", 456L)
             repeat(3) { increaseTokenVersion() }
         }
 
@@ -109,7 +109,7 @@ internal class AuthTokenServiceTest {
     @DisplayName("payload(): 숫자 타입(ID, Version)은 Long 값으로 정확히 비교")
     fun payload_handles_number_types_correctly() {
         val user = User("numberTestUser", "password", "number@test.com").apply {
-            ReflectionTestUtils.setField(this, "_id", 999_999_999L)
+            ReflectionTestUtils.setField(this, "id", 999_999_999L)
             repeat(5) { increaseTokenVersion() }
         }
 
@@ -150,7 +150,7 @@ internal class AuthTokenServiceTest {
     }
 
     private fun User.withId(id: Long): User = apply {
-        ReflectionTestUtils.setField(this, "_id", id)
+        ReflectionTestUtils.setField(this, "id", id)
     }
 
     //Long으로 전환

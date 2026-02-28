@@ -1,7 +1,6 @@
 package com.back.domain.item.item.controller
 
 import com.back.domain.item.item.dto.*
-import com.back.domain.item.item.entity.Item
 import com.back.domain.item.item.service.ItemRecommendationService
 import com.back.domain.item.item.service.ItemService
 import com.back.domain.item.item.service.ItemStatisticsService
@@ -10,7 +9,6 @@ import com.back.global.rsData.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import org.springframework.http.MediaType
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*

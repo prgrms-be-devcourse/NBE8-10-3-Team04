@@ -27,11 +27,11 @@ class User(
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var _id: Long? = null
+    var id: Long? = null
         protected set
 
-    val id: Long
-        get() = _id ?: error("User is not persisted yet (id is null)")
+    val persistedId: Long
+        get() = id ?: throw IllegalStateException("User 엔티티가 아직 영속화되지 않았습니다. (id is null)")
 
     protected constructor() : this(
         loginId = "",
