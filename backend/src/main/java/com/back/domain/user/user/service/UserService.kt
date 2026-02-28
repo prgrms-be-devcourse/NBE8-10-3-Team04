@@ -78,7 +78,7 @@ class UserService(
     @Transactional
     fun updateProfile(
         id: Long,
-        @NotBlank @Size(min = 2, max = 30) email: String
+        email: String
     ): User {
         val user = userRepository.findById(id)
             .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
@@ -101,8 +101,8 @@ class UserService(
     @Transactional
     fun changePassword(
         id: Long,
-        @NotBlank @Size(min = 2, max = 30) currentPassword: String,
-        @NotBlank @Size(min = 2, max = 30) newPassword: String
+        currentPassword: String,
+        newPassword: String
     ): User {
         val user = userRepository.findById(id)
             .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
