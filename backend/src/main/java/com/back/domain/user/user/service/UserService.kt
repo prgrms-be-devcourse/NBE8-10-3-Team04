@@ -6,8 +6,6 @@ import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import com.back.global.s3.S3ImageService
 import org.springframework.transaction.annotation.Transactional
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Size
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.*
@@ -78,7 +76,7 @@ class UserService(
     @Transactional
     fun updateProfile(
         id: Long,
-        @NotBlank @Size(min = 2, max = 30) email: String
+        email: String
     ): User {
         val user = userRepository.findById(id)
             .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
@@ -101,8 +99,8 @@ class UserService(
     @Transactional
     fun changePassword(
         id: Long,
-        @NotBlank @Size(min = 2, max = 30) currentPassword: String,
-        @NotBlank @Size(min = 2, max = 30) newPassword: String
+        currentPassword: String,
+        newPassword: String
     ): User {
         val user = userRepository.findById(id)
             .orElseThrow { ServiceException(ErrorCode.USER_NOT_FOUND) }
