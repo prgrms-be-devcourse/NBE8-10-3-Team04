@@ -57,7 +57,7 @@ class ItemService(
     // itemId + userId로 Item 조회 및 권한 검증 (쿼리 1회로 최적화)
     private fun findOwnedItemOrThrow(itemId: Long, userId: Long): Item {
         return itemRepository.findByIdAndUserId(itemId, userId)
-            .orElseThrow { ServiceException(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION) }
+            ?: throw ServiceException(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION)
     }
 
     // userId로 User 조회
