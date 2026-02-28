@@ -6,8 +6,6 @@ import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import com.back.global.s3.S3ImageService
 import org.springframework.transaction.annotation.Transactional
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Size
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.*
