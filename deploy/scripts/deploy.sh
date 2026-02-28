@@ -6,34 +6,26 @@ DEPLOY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROOT_DIR="$(cd "${DEPLOY_DIR}/.." && pwd)"
 COMPOSE_FILE="${DEPLOY_DIR}/compose/bluegreen.yml"
 ACTIVE_FILE="${DEPLOY_DIR}/ACTIVE_COLOR"
-SWITCH_SCRIPT="${SCRIPT_DIR}/switch.sh"
+ENV_FILE="${ROOT_DIR}/.env.deploy"
+NGINX_CONF_DIR="${DEPLOY_DIR}/nginx/conf.d"
+BLUE_CONF="${NGINX_CONF_DIR}/active.conf"
+GREEN_CONF="${NGINX_CONF_DIR}/active-green.conf"
+CURRENT_CONF="${NGINX_CONF_DIR}/current.conf"
 
-if [[ ! -f "${ROOT_DIR}/.env.deploy" ]]; then
-  echo ".env.deploy 파일이 필요합니다: ${ROOT_DIR}/.env.deploy"
+if [[ ! -f "${ENV_FILE}" ]]; then
+  echo ".env.deploy 파일이 필요합니다: ${ENV_FILE}"
   exit 1
 fi
 
-if [[ ! -x "${SWITCH_SCRIPT}" ]]; then
-  echo "switch.sh 실행 권한이 없습니다: ${SWITCH_SCRIPT}"
-  exit 1
-fi
-
-CURRENT_COLOR="blue"
-if [[ -f "${ACTIVE_FILE}" ]]; then
-  CURRENT_COLOR="$(tr -d '[:space:]' < "${ACTIVE_FILE}")"
-fi
-
-if [[ "${CURRENT_COLOR}" == "blue" ]]; then
-  TARGET_COLOR="green"
-else
-  TARGET_COLOR="blue"
-fi
-
-echo "현재 활성 색상: ${CURRENT_COLOR}"
-echo "배포 대상 색상: ${TARGET_COLOR}"
+for f in "${BLUE_CONF}" "${GREEN_CONF}"; do
+  if [[ ! -f "${f}" ]]; then
+    echo "nginx 라우팅 파일이 없습니다: ${f}"
+    exit 1
+  fi
+done
 
 dc() {
-  docker compose --env-file "${ROOT_DIR}/.env.deploy" -f "${COMPOSE_FILE}" "$@"
+  docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"
 }
 
 wait_with_retry() {
@@ -55,30 +47,81 @@ wait_with_retry() {
   return 1
 }
 
-echo "대상 색상 서비스 기동..."
-dc up -d mysql "backend-${TARGET_COLOR}" "frontend-${TARGET_COLOR}" nginx
+read_current_color() {
+  if [[ -f "${ACTIVE_FILE}" ]]; then
+    local color
+    color="$(tr -d '[:space:]' < "${ACTIVE_FILE}")"
+    if [[ "${color}" == "blue" || "${color}" == "green" ]]; then
+      echo "${color}"
+      return
+    fi
+  fi
 
-echo "백엔드 헬스체크..."
+  # 초기 배포 시 첫 타깃을 blue로 맞추기 위해 current를 green으로 간주
+  echo "green"
+}
+
+determine_target_color() {
+  local current="$1"
+  if [[ "${current}" == "blue" ]]; then
+    echo "green"
+  else
+    echo "blue"
+  fi
+}
+
+switch_backend_route() {
+  local target="$1"
+
+  if [[ "${target}" == "blue" ]]; then
+    cp "${BLUE_CONF}" "${CURRENT_CONF}"
+  else
+    cp "${GREEN_CONF}" "${CURRENT_CONF}"
+  fi
+
+  dc exec -T nginx nginx -s reload
+  echo "${target}" > "${ACTIVE_FILE}"
+  echo "활성 백엔드 전환 완료: ${target}"
+}
+
+CURRENT_COLOR="$(read_current_color)"
+TARGET_COLOR="$(determine_target_color "${CURRENT_COLOR}")"
+
+echo "현재 활성 색상: ${CURRENT_COLOR}"
+echo "배포 대상 색상: ${TARGET_COLOR}"
+
+echo "기본 서비스 확인(mysql/frontend/nginx)..."
+dc up -d mysql frontend nginx
+
+echo "대상 백엔드 기동..."
+dc up -d "backend-${TARGET_COLOR}"
+
+echo "대상 백엔드 헬스체크..."
 wait_with_retry \
   "backend-${TARGET_COLOR} /actuator/health" \
   "dc exec -T nginx sh -lc 'wget -qO- http://backend-${TARGET_COLOR}:8080/actuator/health | grep -q UP'"
 
 echo "프론트엔드 헬스체크..."
 wait_with_retry \
-  "frontend-${TARGET_COLOR} /" \
-  "dc exec -T nginx sh -lc 'wget -qO- http://frontend-${TARGET_COLOR}:3000 > /dev/null'"
+  "frontend /" \
+  "dc exec -T nginx sh -lc 'wget -qO- http://frontend:3000 > /dev/null'"
 
-echo "활성 색상 전환..."
-"${SWITCH_SCRIPT}" "${TARGET_COLOR}"
+echo "트래픽 전환..."
+switch_backend_route "${TARGET_COLOR}"
 
-echo "전환 후 기본 응답 확인..."
+echo "전환 후 nginx 응답 확인..."
 wait_with_retry \
   "nginx / 응답" \
   "dc exec -T nginx sh -lc 'wget -qO- http://localhost > /dev/null'" \
   10 \
   1
 
-echo "이전 색상 정리..."
-dc stop "backend-${CURRENT_COLOR}" "frontend-${CURRENT_COLOR}" || true
+if [[ "${CURRENT_COLOR}" == "blue" || "${CURRENT_COLOR}" == "green" ]]; then
+  if [[ "${CURRENT_COLOR}" != "${TARGET_COLOR}" ]]; then
+    echo "기존 백엔드 드레이닝 후 정리..."
+    sleep 10
+    dc stop "backend-${CURRENT_COLOR}" || true
+  fi
+fi
 
 echo "배포 완료: ${CURRENT_COLOR} -> ${TARGET_COLOR}"
