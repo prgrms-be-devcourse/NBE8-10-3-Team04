@@ -29,8 +29,11 @@ class EmailController (
             // 아이템에 연결된 사용자 조회 // 사용자 미연결 방어
             val user = item.user ?: throw ServiceException(ErrorCode.DATA_NOT_FOUND, "아이템에 연결된 사용자가 없습니다.")
 
-            val email = user.email?.takeIf { it.isNotBlank() }
+            val email = user.email.takeIf { it.isNotBlank() }
                 ?: throw ServiceException(ErrorCode.INVALID_INPUT_VALUE, "사용자의 이메일 주소가 없습니다.")
+
+            val itemName = item.name?.takeIf { it.isNotBlank() }
+                ?: throw ServiceException(ErrorCode.DATA_NOT_FOUND, "아이템 이름이 없습니다.")
 
             // D-Day 알림 이메일 발송
             val sentToEmail = emailService.sendDDayNotification(email, item)
@@ -40,7 +43,7 @@ class EmailController (
             response["message"] = "테스트 D-Day 이메일 발송 성공"
             response["recipientEmail"] = sentToEmail
             response["itemId"] = itemId
-            response["itemName"] = item.name ?: ""
+            response["itemName"] = itemName
             response["userId"] = user.id
             response["userLoginId"] = user.loginId
 
