@@ -27,11 +27,8 @@ class User(
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var _id: Long? = null
+    var id: Long? = null
         protected set
-
-    val id: Long
-        get() = _id ?: error("User is not persisted yet (id is null)")
 
     protected constructor() : this(
         loginId = "",

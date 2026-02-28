@@ -94,7 +94,7 @@ internal class ItemHistoryServiceTest {
     @DisplayName("특정 아이템 이력 조회 - 성공: 이력이 없으면 빈 리스트 반환")
     fun getItemHistories_empty() {
         // 이력이 없는 상태에서 조회 시 빈 리스트가 반환되는지 확인
-        val responses = itemHistoryService.getItemHistories(item.id!!, user.id)
+        val responses = itemHistoryService.getItemHistories(item.id!!, user.id!!)
         assertThat(responses).isEmpty()
     }
 
@@ -103,7 +103,7 @@ internal class ItemHistoryServiceTest {
     fun getItemHistories_dto_mapping() {
         // 이력 생성 후 조회
         itemHistoryService.createItemHistory(item)
-        val responses = itemHistoryService.getItemHistories(item.id!!, user.id)
+        val responses = itemHistoryService.getItemHistories(item.id!!, user.id!!)
 
         // 조회된 DTO가 아이템 ID, 시작일 등 데이터를 올바르게 매핑했는지 검증
         assertThat(responses).hasSize(1)
@@ -121,7 +121,7 @@ internal class ItemHistoryServiceTest {
         itemHistoryService.createItemHistory(item)
 
         // 조회 시 최신순(시작일 내림차순)으로 정렬되어 반환되는지 확인
-        val responses = itemHistoryService.getItemHistories(item.id!!, user.id)
+        val responses = itemHistoryService.getItemHistories(item.id!!, user.id!!)
 
         assertThat(responses).hasSize(2)
         assertThat(responses[0].startDate).isAfterOrEqualTo(responses[1].startDate)
@@ -131,7 +131,7 @@ internal class ItemHistoryServiceTest {
     @DisplayName("전체 아이템 이력 조회 - 성공: 이력이 없으면 빈 리스트 반환")
     fun getAllItemHistories_empty() {
         // 유저의 모든 아이템 이력 조회 시 데이터가 없으면 빈 리스트 반환 검증
-        val responses = itemHistoryService.getAllItemHistories(user.id)
+        val responses = itemHistoryService.getAllItemHistories(user.id!!)
         assertThat(responses).isEmpty()
     }
 
@@ -158,7 +158,7 @@ internal class ItemHistoryServiceTest {
         itemHistoryService.createItemHistory(otherItem)
 
         // 내 이력 조회 시, 다른 유저의 데이터는 제외되고 내 데이터만 조회되는지 확인
-        val responses = itemHistoryService.getAllItemHistories(user.id)
+        val responses = itemHistoryService.getAllItemHistories(user.id!!)
 
         assertThat(responses).hasSize(1)
         assertThat(responses[0].itemName).isEqualTo(item.name)
@@ -170,7 +170,7 @@ internal class ItemHistoryServiceTest {
     fun getAllItemHistories_dto_mapping() {
         itemHistoryService.createItemHistory(item)
 
-        val responses = itemHistoryService.getAllItemHistories(user.id)
+        val responses = itemHistoryService.getAllItemHistories(user.id!!)
 
         // 전체 이력 DTO에 카테고리 이름, 이미지 URL 등이 포함되어 있는지 검증
         assertThat(responses).hasSize(1)
@@ -248,7 +248,7 @@ internal class ItemHistoryServiceTest {
 
         // 다른 유저(stranger)가 내 아이템의 이력을 조회하려 할 때 예외(권한 없음) 발생 확인
         val exception = assertThrows<ServiceException> {
-            itemHistoryService.getItemHistories(item.id!!, stranger.id)
+            itemHistoryService.getItemHistories(item.id!!, stranger.id!!)
         }
 
         // ITEM_NOT_FOUND_OR_NO_PERMISSION 에러 코드 검증

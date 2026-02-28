@@ -53,7 +53,7 @@ internal class SecurityIntegrationTest {
     private fun createAccessToken(user: User): String =
         createAccessToken(
             mapOf(
-                "id" to user.id,
+                "id" to user.id!!,
                 "loginId" to user.loginId,
                 "email" to (user.email ?: ""),
                 "tokenVersion" to user.tokenVersion

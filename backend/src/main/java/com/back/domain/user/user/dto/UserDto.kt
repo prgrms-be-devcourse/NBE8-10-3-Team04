@@ -17,7 +17,7 @@ data class UserDto(
         @JvmStatic
         fun from(user: User): UserDto =
             UserDto(
-                user.id,
+                user.id!!,
                 user.loginId,
                 user.email
             )

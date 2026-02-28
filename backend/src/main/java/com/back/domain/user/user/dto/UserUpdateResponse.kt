@@ -17,7 +17,7 @@ data class UserUpdateResponse(
         @JvmStatic
         fun from(user: User): UserUpdateResponse {
             return UserUpdateResponse(
-                user.id,
+                user.id!!,
                 user.loginId,
                 user.email
             )
