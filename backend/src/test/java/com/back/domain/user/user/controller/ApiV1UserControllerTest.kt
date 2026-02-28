@@ -73,7 +73,7 @@ class ApiV1UserControllerTest {
                 .content("{\"password\":\"test123\",\"email\":\"test@test.com\"}")
         )
             .andExpect(MockMvcResultMatchers.status().isBadRequest())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.resultCode").value("400-1"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.resultCode").value("400-C002"))
     }
 
     @Test
@@ -487,7 +487,7 @@ class ApiV1UserControllerTest {
         )
             .andDo(MockMvcResultHandlers.print())
             .andExpect(MockMvcResultMatchers.status().isUnauthorized()) // 400 대신 401을 기대하도록 수정
-            .andExpect(MockMvcResultMatchers.jsonPath("$.resultCode").value("401-1"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.resultCode").value("401-U003"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.msg").value("비밀번호가 일치하지 않습니다."))
     }
 

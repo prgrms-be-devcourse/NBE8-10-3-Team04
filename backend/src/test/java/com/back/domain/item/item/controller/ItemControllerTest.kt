@@ -113,7 +113,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("getItem"))
             status { isNotFound() }
-            jsonPath("$.resultCode") { value("404-1") }
+            jsonPath("$.resultCode") { value("404-I002") }
             jsonPath("$.msg") { value("존재하지 않는 아이템이거나 권한이 없습니다.") }
         }
     }
@@ -158,7 +158,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("replaceItem"))
             status { isNotFound() }
-            jsonPath("$.resultCode") { value("404-1") }
+            jsonPath("$.resultCode") { value("404-I002") }
             jsonPath("$.msg") { value("존재하지 않는 아이템이거나 권한이 없습니다.") }
         }
     }
@@ -225,7 +225,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("modifyItem"))
             status { isNotFound() }
-            jsonPath("$.resultCode") { value("404-1") }
+            jsonPath("$.resultCode") { value("404-I002") }
             jsonPath("$.msg") { value("존재하지 않는 아이템이거나 권한이 없습니다.") }
         }
     }
@@ -255,7 +255,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("modifyItem"))
             status { isNotFound() }
-            jsonPath("$.resultCode") { value("404-1") }
+            jsonPath("$.resultCode") { value("404-I003") }
             jsonPath("$.msg") { value("존재하지 않는 카테고리입니다.") }
         }
     }
@@ -285,7 +285,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("modifyItem"))
             status { isBadRequest() }
-            jsonPath("$.resultCode") { value("400-1") }
+            jsonPath("$.resultCode") { value("400-C001") }
             jsonPath("$.msg") { value("cycleDays 형식이 올바르지 않습니다. 예: 30d, 2m, 1y") }
         }
     }
@@ -394,7 +394,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("createItem"))
             status { isBadRequest() }
-            jsonPath("$.resultCode") { value("400-1") }
+            jsonPath("$.resultCode") { value("400-C001") }
         }
     }
 
@@ -416,7 +416,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("createItem"))
             status { isBadRequest() }
-            jsonPath("$.resultCode") { value("400-1") }
+            jsonPath("$.resultCode") { value("400-C001") }
         }
     }
 
@@ -438,7 +438,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("createItem"))
             status { isBadRequest() }
-            jsonPath("$.resultCode") { value("400-1") }
+            jsonPath("$.resultCode") { value("400-C001") }
         }
     }
 
@@ -461,7 +461,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("createItem"))
             status { isBadRequest() }
-            jsonPath("$.resultCode") { value("400-1") }
+            jsonPath("$.resultCode") { value("400-C001") }
             jsonPath("$.msg") { value("cycleDays 형식이 올바르지 않습니다. 예: 30d, 2m, 1y") }
         }
     }
@@ -485,7 +485,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("createItem"))
             status { isNotFound() }
-            jsonPath("$.resultCode") { value("404-1") }
+            jsonPath("$.resultCode") { value("404-I003") }
             jsonPath("$.msg") { value("존재하지 않는 카테고리입니다.") }
         }
     }
@@ -509,7 +509,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("createItem"))
             status { isBadRequest() }
-            jsonPath("$.resultCode") { value("400-1") }
+            jsonPath("$.resultCode") { value("400-C001") }
             jsonPath("$.msg") { value("cycleDays 값은 1 이상이어야 합니다.") }
         }
     }
@@ -575,7 +575,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("deleteItem"))
             status { isNotFound() }
-            jsonPath("$.resultCode") { value("404-1") }
+            jsonPath("$.resultCode") { value("404-I002") }
             jsonPath("$.msg") { value("존재하지 않는 아이템이거나 권한이 없습니다.") }
         }
     }
@@ -596,7 +596,7 @@ class ItemControllerTest {
             match(MockMvcResultMatchers.handler().handlerType(ItemController::class.java))
             match(MockMvcResultMatchers.handler().methodName("deleteItem"))
             status { isNotFound() }
-            jsonPath("$.resultCode") { value("404-1") }
+            jsonPath("$.resultCode") { value("404-I002") }
             jsonPath("$.msg") { value("존재하지 않는 아이템이거나 권한이 없습니다.") }
         }
     }
