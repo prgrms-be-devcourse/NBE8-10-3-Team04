@@ -1,9 +1,9 @@
-# Oracle Always Free 기반 Blue/Green 배포 가이드
+# AWS EC2 기반 Blue/Green 배포 가이드
 
 ## 1. 개요
 
 - 프로젝트: Spring Boot(Backend) + Next.js(Frontend) + MySQL
-- 인프라: Oracle Cloud Always Free VM 1대
+- 인프라: AWS EC2 VM 1대
 - 배포 방식: Docker Compose + Nginx + Blue/Green
 - CI/CD: GitHub Actions (`main` push 시 자동 배포)
 - 외부 진입: `http://<PUBLIC_IP>:80` (도메인/HTTPS는 추후 확장)
@@ -36,7 +36,7 @@
 
 ---
 
-## 3. 서버 사전 준비 (Oracle VM)
+## 3. 서버 사전 준비 (AWS EC2)
 
 ### 3.1 포트 정책
 - 인바운드 허용: `22/tcp`, `80/tcp`
@@ -44,11 +44,17 @@
 
 ### 3.2 서버 기본 세팅
 ```bash
-sudo apt update
-sudo apt install -y ca-certificates curl git
-curl -fsSL https://get.docker.com | sudo sh
+sudo dnf -y update
+sudo dnf -y install git docker
+sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
-newgrp docker
+```
+
+```bash
+sudo mkdir -p /usr/local/lib/docker/cli-plugins
+sudo curl -fSL https://github.com/docker/compose/releases/download/v2.40.3/docker-compose-linux-x86_64 \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 docker --version
 docker compose version
 ```
@@ -146,11 +152,9 @@ cat deploy/ACTIVE_COLOR
 
 배포 워크플로우에서 사용하는 키:
 
-- `ORACLE_SERVER_HOST`
-- `ORACLE_SERVER_USER`
-- `ORACLE_SERVER_SSH_KEY`
-- `ORACLE_SERVER_APP_DIR`
-- `NEXT_PUBLIC_API_BASE_URL`
+- `AWS_SERVER_HOST`
+- `AWS_SERVER_SSH_KEY`
+- `NEXT_PUBLIC_API_BASE_URL` (현재 워크플로우 하드코딩, 공인 IP 변경 시 워크플로우 값 수정 필요)
 - `MYSQL_DATABASE`
 - `MYSQL_ROOT_PASSWORD`
 - `MYSQL_APP_USER`
@@ -191,10 +195,10 @@ docker compose --env-file .env.deploy -f deploy/compose/bluegreen.yml exec -T ng
 
 ---
 
-## 9. 비용 0원 운영 체크포인트
+## 9. 비용 운영 체크포인트
 
-- Always Free 범위 외 리소스 생성 금지
+- 프리 티어/크레딧 범위 외 리소스 생성 금지
 - 인바운드 최소 포트(22, 80) 유지
 - 불필요 컨테이너/이미지 정리
-- 용량/트래픽/알림 정책(OCI Budget) 설정
+- 용량/트래픽/알림 정책(AWS Budget) 설정
 - 배포 로그와 상태 파일(`deploy/ACTIVE_COLOR`) 주기 확인
