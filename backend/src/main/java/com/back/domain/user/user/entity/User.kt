@@ -30,6 +30,9 @@ class User(
     var id: Long? = null
         protected set
 
+    val persistedId: Long
+        get() = id ?: throw IllegalStateException("User 엔티티가 아직 영속화되지 않았습니다. (id is null)")
+
     protected constructor() : this(
         loginId = "",
         password = "",

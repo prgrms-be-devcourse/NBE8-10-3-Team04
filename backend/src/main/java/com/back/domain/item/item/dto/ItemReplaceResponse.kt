@@ -26,8 +26,8 @@ data class ItemReplaceResponse(
         @JvmStatic
         fun from(item: Item): ItemReplaceResponse {
             return ItemReplaceResponse(
-                id = item.id!!,
-                item.user!!.id!!,
+                id = item.id!!, // Item 엔티티도 추후 persistedId 도입을 고려EmailController
+                userId = item.user!!.persistedId, // id!! -> persistedId 로 변경
                 if (item.category == null) null else item.category!!.id,
                 if (item.category == null) null else item.category!!.name,
                 name = item.name ?: "",

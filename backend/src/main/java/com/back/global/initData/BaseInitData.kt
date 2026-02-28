@@ -69,7 +69,7 @@ class BaseInitData(
 
         // user1.getId() 같은 Getter 메서드 대신 프로퍼티 접근 구문(user1.id)을 사용
         itemService.createItem(
-            user1.id!!,
+            user1.persistedId,
             ItemCreateRequest(
                 categoryId = bathroom.id!!,
                 name = "칫솔",
@@ -81,7 +81,7 @@ class BaseInitData(
         )
 
         itemService.createItem(
-            user1.id!!,
+            user1.persistedId,
             ItemCreateRequest(
                 categoryId = kitchen.id!!,
                 name = "수세미",
@@ -93,7 +93,7 @@ class BaseInitData(
         )
 
         itemService.createItem(
-            user2.id!!,
+            user2.persistedId,
             ItemCreateRequest(
                 categoryId = car.id!!,
                 name = "엔진오일",
@@ -105,7 +105,7 @@ class BaseInitData(
         )
 
         itemService.createItem(
-            user1.id!!,
+            user1.persistedId,
             ItemCreateRequest(
                 categoryId = bathroom.id!!,
                 name = "테스트용 칫솔 (D-Day 0)",

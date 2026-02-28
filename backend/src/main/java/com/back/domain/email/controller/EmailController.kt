@@ -44,7 +44,7 @@ class EmailController (
             response["recipientEmail"] = sentToEmail
             response["itemId"] = itemId
             response["itemName"] = itemName
-            response["userId"] = user.id!!
+            response["userId"] = user.persistedId
             response["userLoginId"] = user.loginId
 
             ResponseEntity.ok(response)

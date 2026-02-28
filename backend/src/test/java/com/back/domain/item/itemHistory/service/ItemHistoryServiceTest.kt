@@ -94,7 +94,7 @@ internal class ItemHistoryServiceTest {
     @DisplayName("특정 아이템 이력 조회 - 성공: 이력이 없으면 빈 리스트 반환")
     fun getItemHistories_empty() {
         // 이력이 없는 상태에서 조회 시 빈 리스트가 반환되는지 확인
-        val responses = itemHistoryService.getItemHistories(item.id!!, user.id!!)
+        val responses = itemHistoryService.getItemHistories(item.id!!, user.persistedId)
         assertThat(responses).isEmpty()
     }
 
@@ -131,7 +131,7 @@ internal class ItemHistoryServiceTest {
     @DisplayName("전체 아이템 이력 조회 - 성공: 이력이 없으면 빈 리스트 반환")
     fun getAllItemHistories_empty() {
         // 유저의 모든 아이템 이력 조회 시 데이터가 없으면 빈 리스트 반환 검증
-        val responses = itemHistoryService.getAllItemHistories(user.id!!)
+        val responses = itemHistoryService.getAllItemHistories(user.persistedId)
         assertThat(responses).isEmpty()
     }
 
@@ -248,7 +248,7 @@ internal class ItemHistoryServiceTest {
 
         // 다른 유저(stranger)가 내 아이템의 이력을 조회하려 할 때 예외(권한 없음) 발생 확인
         val exception = assertThrows<ServiceException> {
-            itemHistoryService.getItemHistories(item.id!!, stranger.id!!)
+            itemHistoryService.getItemHistories(item.id!!, stranger.persistedId)
         }
 
         // ITEM_NOT_FOUND_OR_NO_PERMISSION 에러 코드 검증

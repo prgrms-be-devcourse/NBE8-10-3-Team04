@@ -157,7 +157,7 @@ class CustomAuthenticationFilter(
 
         // 9) SecurityContext에 인증 정보 주입
         val securityUser: UserDetails = SecurityUser(
-            user.id!!,
+            user.persistedId,
             user.loginId,
             "",
             user.email ?: "",
