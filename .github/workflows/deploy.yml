@@ -2,7 +2,7 @@ name: Deploy Blue-Green
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main ]
   # GitHub Actions UI에서 현재 브랜치를 선택해 수동 배포 테스트할 때 사용
   workflow_dispatch:
 
@@ -13,6 +13,10 @@ env:
 permissions:
   contents: read
   packages: write
+
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false
 
 jobs:
   build-and-push:
