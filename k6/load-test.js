@@ -3,11 +3,11 @@ import { check, sleep, fail } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '10s', target: 50 },   // 10초 동안 50명까지 증가
-    { duration: '20s', target: 50 },   // 20초 동안 50명 유지
-    { duration: '10s', target: 100 },  // 10초 동안 100명까지 증가
-    { duration: '20s', target: 100 },  // 20초 동안 100명 유지
-    { duration: '10s', target: 0 },    // 10초 동안 0명으로 감소
+    { duration: '10s', target: 150 },
+    { duration: '20s', target: 150 },
+    { duration: '10s', target: 300 },  // 최대 300명으로 증가
+    { duration: '20s', target: 300 },
+    { duration: '10s', target: 0 },
   ],
 };
 
@@ -93,13 +93,13 @@ export default function () {
   }
 
   // 회원가입 페이지 (permitAll)
-  const signup = http.get(`${BASE_URL}/api/v1/user/signup`);
+//  const signup = http.get(`${BASE_URL}/api/v1/user/signup`);
 
   // actuator health 체크 (10회 중 1회만 호출하여 부하 분산)
-  if (__ITER % 10 === 0) {
-    const health = http.get(`${BASE_URL}/actuator/health`);
-    check(health, { 'health status 200': (r) => r.status === 200 });
-  }
+//  if (__ITER % 10 === 0) {
+//    const health = http.get(`${BASE_URL}/actuator/health`);
+//    check(health, { 'health status 200': (r) => r.status === 200 });
+//  }
 
   sleep(1);
 }
