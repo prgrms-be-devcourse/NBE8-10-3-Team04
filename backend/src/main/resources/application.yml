@@ -39,7 +39,7 @@ spring:
         highlight_sql: true
         use_sql_comments: true
         # 연관 데이터를 100개씩 한 번에 IN 쿼리로 가져옴
-        default_batch_fetch_size: 100
+#        default_batch_fetch_size: 100
   servlet:
     multipart:
       max-file-size: 10MB      # 파일 하나당 최대 크기

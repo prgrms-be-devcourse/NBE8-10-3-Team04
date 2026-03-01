@@ -15,59 +15,43 @@ const BASE_URL = __ENV.BASE_URL;
 const USER_ID = __ENV.USER_ID;
 const USER_PW = __ENV.USER_PW;
 
-if (!BASE_URL) {
-  throw new Error('환경변수 BASE_URL이 설정되어 있지 않습니다. .env 파일을 추가하고 --env-file 옵션으로 로드하세요.');
-}
-if (!USER_ID || !USER_PW) {
-  throw new Error('로그인용 USER_ID, USER_PW 환경변수가 필요합니다.');
+// 환경 변수 누락 방지 로직
+if (!BASE_URL || !USER_ID || !USER_PW) {
+  throw new Error('환경변수(BASE_URL, USER_ID, USER_PW)가 설정되지 않았습니다.');
 }
 
-function loginAndGetAuth() {
+// 1. 마스터(setup)가 1번만 로그인해서 쿠키를 발급받음
+export function setup() {
   const loginRes = http.post(
     `${BASE_URL}/api/v1/user/login`,
     JSON.stringify({ loginId: USER_ID, password: USER_PW }),
     {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    },
-  );
-
-  const loginOk = check(loginRes, { 'login status < 400': (r) => r.status < 400 });
-  if (!loginOk) {
-    fail(`로그인 실패 (status: ${loginRes.status})`);
-  }
-
-  // 세션 쿠키 정리
-  const cookies = Object.fromEntries(
-    Object.entries(loginRes.cookies || {}).map(([name, values]) => [name, values?.[0]?.value]),
-  );
-
-  // 토큰 응답이 있다면 Authorization 헤더로 추가
-  let tokenHeader = {};
-  try {
-    const token = loginRes.json('accessToken') ?? loginRes.json('token');
-    if (token) {
-      tokenHeader = { Authorization: `Bearer ${token}` };
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     }
-  } catch (e) {
-    // JSON 파싱 실패 시 토큰 없이 진행 (쿠키 세션 사용)
+  );
+
+  const loginOk = check(loginRes, { 'setup login success': (r) => r.status === 200 });
+  if (!loginOk) fail(`초기 로그인 실패 (status: ${loginRes.status})`);
+
+  // 쿠키를 깔끔한 자바스크립트 객체로 변환
+  const cookiesObj = {};
+  if (loginRes.cookies) {
+    for (const [name, values] of Object.entries(loginRes.cookies)) {
+      if (values.length > 0) cookiesObj[name] = values[0].value;
+    }
   }
 
-  const commonParams = {
-    headers: {
-      Accept: 'application/json',
-      ...tokenHeader,
-    },
-    cookies,
-  };
-
-  return commonParams;
+  // 💡 문제의 Authorization 토큰은 제외하고 쿠키만 300명에게 전달!
+  return { cookies: cookiesObj };
 }
 
-export default function () {
-  const commonParams = loginAndGetAuth();
+// 300명의 가상 사용자가 반복하는 구간
+export default function (data) {
+
+  const commonParams = {
+    headers: { Accept: 'application/json' },
+    cookies: data.cookies, // 모든 VU가 셋업에서 받은 쿠키를 장착
+  };
 
   // 아이템 목록 조회
   const items = http.get(`${BASE_URL}/api/v1/items`, commonParams);
