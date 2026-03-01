@@ -5,7 +5,7 @@
 - 프로젝트: Spring Boot(Backend) + Next.js(Frontend) + MySQL
 - 인프라: AWS EC2 VM 1대
 - 배포 방식: Docker Compose + Nginx + Backend Blue/Green
-- CI/CD: GitHub Actions (`main`, `dev` push 또는 `workflow_dispatch`)
+- CI/CD: GitHub Actions (`main` push 또는 `workflow_dispatch`)
 - 외부 진입: `http://<PUBLIC_IP>:80`
 
 핵심 원칙:
@@ -103,7 +103,7 @@ chmod +x deploy/scripts/deploy.sh
 
 ## 5. 자동 배포 흐름
 
-1. `main` 또는 `dev` 브랜치에 push (또는 수동 실행)
+1. `main` 브랜치에 push (또는 `workflow_dispatch`로 수동 실행)
 2. GitHub Actions가 backend/frontend 이미지 빌드 후 GHCR push
 3. 워크플로우가 서버 SSH 접속
 4. 서버 `.env.deploy` 갱신
