@@ -3,6 +3,7 @@ package com.back.domain.item.item.entity
 import com.back.domain.category.category.entity.Category
 import com.back.domain.item.itemHistory.entity.ItemHistory
 import com.back.domain.user.user.entity.User
+import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import jakarta.persistence.*
 import java.time.LocalDate
@@ -54,7 +55,7 @@ class Item(
     fun validateOwner(actorUserId: Long) {
         // user가 Non-null이 되었으므로 안전하게 접근 가능
         if (this.user.id != actorUserId) {
-            throw ServiceException("403-1", "${this.id}번 아이템에 대한 권한이 없습니다.")
+            throw ServiceException(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION)
         }
     }
 
