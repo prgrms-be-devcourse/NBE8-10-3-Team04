@@ -23,11 +23,14 @@ spring:
   datasource:
     hikari:
       auto-commit: false
+      # 대규모 트래픽 병목을 해소하기 위해 커넥션 풀 최대 크기를 10(기본값)에서 50으로 증가
+      maximum-pool-size: 50
+
   jackson:
     serialization:
       fail-on-empty-beans: false
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
     properties:
@@ -35,6 +38,8 @@ spring:
         format_sql: true
         highlight_sql: true
         use_sql_comments: true
+        # 연관 데이터를 100개씩 한 번에 IN 쿼리로 가져옴
+        default_batch_fetch_size: 100
   servlet:
     multipart:
       max-file-size: 10MB      # 파일 하나당 최대 크기
@@ -53,10 +58,10 @@ springdoc:
   default-produces-media-type: application/json;charset=UTF-8
 logging:
   level:
-    org.hibernate.orm.jdbc.bind: TRACE
-    org.hibernate.orm.jdbc.extract: TRACE
-    org.springframework.transaction.interceptor: TRACE
-    com.back: DEBUG
+#    org.hibernate.orm.jdbc.bind: TRACE
+#    org.hibernate.orm.jdbc.extract: TRACE
+#    org.springframework.transaction.interceptor: TRACE
+    com.back: INFO
 management:
   endpoints:
     web:

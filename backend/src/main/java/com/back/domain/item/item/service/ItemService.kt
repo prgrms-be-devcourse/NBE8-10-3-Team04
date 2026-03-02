@@ -11,12 +11,14 @@ import com.back.domain.item.itemHistory.repository.ItemHistoryRepository
 import com.back.domain.item.itemHistory.service.ItemHistoryService
 import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.service.UserService
+import com.back.global.event.S3ImageDeleteEvent
 import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import com.back.global.s3.S3ImageService
 import com.google.genai.Client
 import lombok.RequiredArgsConstructor
 import org.apache.commons.lang3.StringUtils
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronization
@@ -40,6 +42,7 @@ class ItemService(
     private val itemRepository: ItemRepository,
     private val categoryRepository: CategoryRepository,
     private val s3ImageService: S3ImageService,
+    private val eventPublisher: ApplicationEventPublisher // 이벤트 퍼블리셔 주입
 ) {
 
     // == 조회 ==
@@ -164,11 +167,11 @@ class ItemService(
         val item = findOwnedItemOrThrow(itemId, userId) // 쿼리 1회로 감소
         val category = findCategoryOrThrow(request.categoryId) // 메서드 재사용
 
-        val finalImgUrl = resolveImageUrl(request.image, request.imgUrl, item.imgUrl) // 중복 제거
+        val finalImgUrl = resolveImageUrl(request.image, request.imgUrl, item.imgUrl)
 
-        // // 기존 이미지 파일이 동일하지 않으면 삭제
+        // 기존 이미지 파일이 동일하지 않으면 이벤트 발행
         if (finalImgUrl != item.imgUrl && item.imgUrl != null) {
-            item.imgUrl?.let { s3ImageService.delete(it) }
+            eventPublisher.publishEvent(S3ImageDeleteEvent(item.imgUrl!!))
         }
 
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
@@ -236,19 +239,9 @@ class ItemService(
 
         itemRepository.delete(item)
 
-        // 트랜잭션 커밋 후 S3 삭제 실행
+        // 길었던 TransactionSynchronizationManager 코드를 한 줄로 대체
         if (!imageUrl.isNullOrEmpty()) {
-            // 트랜잭션 동기화가 활성화된 경우(운영)와 아닌 경우(테스트) 분기 처리
-            if (TransactionSynchronizationManager.isSynchronizationActive()) {
-                TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
-                    override fun afterCommit() {
-                        s3ImageService.delete(imageUrl)
-                    }
-                })
-            } else {
-                // 테스트 환경 등 트랜잭션이 없는 경우 즉시 삭제
-                s3ImageService.delete(imageUrl)
-            }
+            eventPublisher.publishEvent(S3ImageDeleteEvent(imageUrl))
         }
     }
 
