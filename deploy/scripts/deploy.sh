@@ -13,6 +13,7 @@ GREEN_CONF="${NGINX_CONF_DIR}/active-green.conf"
 CURRENT_CONF="${NGINX_CONF_DIR}/current.conf"
 DRAIN_SECONDS="${DRAIN_SECONDS:-10}"
 STOP_TIMEOUT_SECONDS="${STOP_TIMEOUT_SECONDS:-35}"
+UP_TIMEOUT_SECONDS="${UP_TIMEOUT_SECONDS:-180}"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo ".env.deploy 파일이 필요합니다: ${ENV_FILE}"
@@ -28,6 +29,18 @@ done
 
 dc() {
   docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"
+}
+
+dc_up_with_timeout() {
+  local label="$1"
+  shift
+
+  if timeout "${UP_TIMEOUT_SECONDS}" docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" up -d "$@"; then
+    echo "[OK] ${label}"
+  else
+    echo "[FAIL] ${label} (timeout ${UP_TIMEOUT_SECONDS}s)"
+    return 1
+  fi
 }
 
 wait_with_retry() {
@@ -93,10 +106,10 @@ echo "현재 활성 색상: ${CURRENT_COLOR}"
 echo "배포 대상 색상: ${TARGET_COLOR}"
 
 echo "기본 서비스 확인(mysql/frontend/nginx)..."
-dc up -d mysql frontend nginx
+dc_up_with_timeout "base services up" mysql frontend nginx
 
 echo "대상 백엔드 기동..."
-dc up -d "backend-${TARGET_COLOR}"
+dc_up_with_timeout "backend-${TARGET_COLOR} up" "backend-${TARGET_COLOR}"
 
 echo "대상 백엔드 헬스체크..."
 wait_with_retry \

@@ -89,8 +89,6 @@ services:
       - ../nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
       - frontend
-      - backend-blue
-      - backend-green
     networks:
       - app-net
 
