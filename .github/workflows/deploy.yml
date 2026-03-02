@@ -61,8 +61,10 @@ jobs:
       - name: Set image metadata
         id: meta
         run: |
-          echo "backend_image=ghcr.io/${{ github.repository }}/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          echo "frontend_image=ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          REPO_LC="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "repo_lc=${REPO_LC}" >> "$GITHUB_OUTPUT"
+          echo "backend_image=ghcr.io/${REPO_LC}/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "frontend_image=ghcr.io/${REPO_LC}/frontend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
@@ -71,7 +73,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.backend_image }}
-            ghcr.io/${{ github.repository }}/backend:latest
+            ghcr.io/${{ steps.meta.outputs.repo_lc }}/backend:latest
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
@@ -82,7 +84,7 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
           tags: |
             ${{ steps.meta.outputs.frontend_image }}
-            ghcr.io/${{ github.repository }}/frontend:latest
+            ghcr.io/${{ steps.meta.outputs.repo_lc }}/frontend:latest
 
   deploy:
     runs-on: ubuntu-latest
