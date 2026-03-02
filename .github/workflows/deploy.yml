@@ -98,6 +98,9 @@ jobs:
             set -euo pipefail
             cd /home/ec2-user/app
 
+            # GHCR 인증 (원격 서버에서 private image pull 가능하도록 로그인)
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
             cat > .env.deploy <<EOF
             BACKEND_IMAGE=${{ needs.build-and-push.outputs.backend_image }}
             FRONTEND_IMAGE=${{ needs.build-and-push.outputs.frontend_image }}
