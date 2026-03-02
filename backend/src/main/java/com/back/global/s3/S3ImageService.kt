@@ -1,5 +1,7 @@
 package com.back.global.s3
 
+import com.back.global.exception.ErrorCode
+import com.back.global.exception.ServiceException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
@@ -45,7 +47,7 @@ class S3ImageService(
                 RequestBody.fromInputStream(multipartFile.inputStream, multipartFile.size)
             )
         } catch (e: IOException) {
-            throw RuntimeException("파일 업로드 중 IO 에러 발생", e)
+            throw ServiceException(ErrorCode.IMAGE_UPLOAD_FAILED)
         }
 
         // 업로드 성공 후 해당 객체에 접근할 수 있는 절대 URL을 생성하여 반환
@@ -67,7 +69,7 @@ class S3ImageService(
             // 추출한 키를 기반으로 S3 단건 삭제 요청 수행
             s3Client.deleteObject { it.bucket(bucketName).key(key) }
         } catch (e: S3Exception) {
-            throw RuntimeException("S3 이미지 삭제 실패", e)
+            throw ServiceException(ErrorCode.IMAGE_DELETE_FAILED)
         }
     }
 
@@ -94,7 +96,7 @@ class S3ImageService(
             // S3 다중 객체 삭제 요청 수행
             s3Client.deleteObjects { it.bucket(bucketName).delete(delete) }
         } catch (e: S3Exception) {
-            throw RuntimeException("S3 다중 이미지 삭제 실패", e)
+            throw ServiceException(ErrorCode.IMAGE_DELETE_FAILED)
         }
     }
 
@@ -111,7 +113,7 @@ class S3ImageService(
             // url.path는 '/파일명' 형태로 반환되므로, 맨 앞의 '/'를 제외한 문자열을 키로 사용
             decodingKey.substring(1)
         } catch (e: Exception) {
-            throw RuntimeException("이미지 URL 파싱 실패: $imageUrl", e)
+            throw ServiceException(ErrorCode.INVALID_IMAGE_URL)
         }
     }
 }
