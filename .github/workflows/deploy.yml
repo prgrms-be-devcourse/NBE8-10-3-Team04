@@ -60,7 +60,7 @@ jobs:
     needs: build-and-push
     env:
       AWS_REGION: ap-northeast-2
-      DEFAULT_INSTANCE_NAME_TAG: NBE8-10-3-Team04-seoul
+      TARGET_INSTANCE_ID: i-059a3fb0104c38732
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -69,24 +69,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
-      - name: Resolve target instance
-        id: target
+      - name: Check target instance SSM status
         run: |
           set -euo pipefail
-          INSTANCE_ID="${{ secrets.AWS_INSTANCE_ID }}"
-
-          if [ -z "${INSTANCE_ID}" ]; then
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=${DEFAULT_INSTANCE_NAME_TAG}" "Name=instance-state-name,Values=running" \
-              --query "Reservations[].Instances[].InstanceId" \
-              --output text | awk '{print $1}')
-          fi
-
-          if [ -z "${INSTANCE_ID}" ] || [ "${INSTANCE_ID}" = "None" ]; then
-            echo "배포 대상 인스턴스를 찾을 수 없습니다. AWS_INSTANCE_ID 시크릿을 추가하거나 Name 태그(${DEFAULT_INSTANCE_NAME_TAG})를 확인하세요."
-            exit 1
-          fi
-
+          INSTANCE_ID="${TARGET_INSTANCE_ID}"
           PING_STATUS=$(aws ssm describe-instance-information \
             --filters "Key=InstanceIds,Values=${INSTANCE_ID}" \
             --query "InstanceInformationList[0].PingStatus" \
@@ -97,11 +83,9 @@ jobs:
             exit 1
           fi
 
-          echo "instance_id=${INSTANCE_ID}" >> "$GITHUB_OUTPUT"
-
       - name: Deploy backend via AWS SSM
         env:
-          INSTANCE_ID: ${{ steps.target.outputs.instance_id }}
+          INSTANCE_ID: ${{ env.TARGET_INSTANCE_ID }}
           BACKEND_IMAGE: ${{ needs.build-and-push.outputs.backend_image }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
