@@ -58,59 +58,177 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-push
+    env:
+      AWS_REGION: ap-northeast-2
+      DEFAULT_INSTANCE_NAME_TAG: NBE8-10-3-Team04-seoul
     steps:
-      - name: Deploy backend on AWS EC2
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.AWS_SERVER_HOST }}
-          username: ec2-user
-          key: ${{ secrets.AWS_SERVER_SSH_KEY }}
-          command_timeout: 15m
-          script: |
-            set -euo pipefail
-            mkdir -p /home/ec2-user/app
-            cd /home/ec2-user/app
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
-            # GHCR private 패키지 pull 인증
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+      - name: Resolve target instance
+        id: target
+        run: |
+          set -euo pipefail
+          INSTANCE_ID="${{ secrets.AWS_INSTANCE_ID }}"
 
-            # 백엔드 단독 실행용 환경변수 파일
-            cat > backend.env <<EOF
-            SPRING_PROFILES_ACTIVE=dev
-            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
-            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
-            AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            EOF
+          if [ -z "${INSTANCE_ID}" ]; then
+            INSTANCE_ID=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=${DEFAULT_INSTANCE_NAME_TAG}" "Name=instance-state-name,Values=running" \
+              --query "Reservations[].Instances[].InstanceId" \
+              --output text | awk '{print $1}')
+          fi
 
-            docker pull "${{ needs.build-and-push.outputs.backend_image }}"
-            docker stop team04-backend >/dev/null 2>&1 || true
-            docker rm team04-backend >/dev/null 2>&1 || true
+          if [ -z "${INSTANCE_ID}" ] || [ "${INSTANCE_ID}" = "None" ]; then
+            echo "배포 대상 인스턴스를 찾을 수 없습니다. AWS_INSTANCE_ID 시크릿을 추가하거나 Name 태그(${DEFAULT_INSTANCE_NAME_TAG})를 확인하세요."
+            exit 1
+          fi
 
-            docker run -d \
-              --name team04-backend \
-              --restart unless-stopped \
-              --env-file /home/ec2-user/app/backend.env \
-              -p 8080:8080 \
-              "${{ needs.build-and-push.outputs.backend_image }}"
+          PING_STATUS=$(aws ssm describe-instance-information \
+            --filters "Key=InstanceIds,Values=${INSTANCE_ID}" \
+            --query "InstanceInformationList[0].PingStatus" \
+            --output text 2>/dev/null || true)
 
-            # 기동 확인
-            ok=0
-            for i in $(seq 1 20); do
-              if curl -fsS http://localhost:8080/actuator/health >/dev/null; then
-                echo "backend healthcheck: OK"
-                ok=1
-                break
-              fi
-              sleep 3
-            done
-            if [ "$ok" -ne 1 ]; then
-              echo "backend healthcheck: FAIL"
-              docker logs --tail 200 team04-backend || true
+          if [ "${PING_STATUS}" != "Online" ]; then
+            echo "대상 인스턴스(${INSTANCE_ID})가 SSM Online 상태가 아닙니다. IAM Role(AmazonSSMManagedInstanceCore) 및 SSM Agent 상태를 확인하세요."
+            exit 1
+          fi
+
+          echo "instance_id=${INSTANCE_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy backend via AWS SSM
+        env:
+          INSTANCE_ID: ${{ steps.target.outputs.instance_id }}
+          BACKEND_IMAGE: ${{ needs.build-and-push.outputs.backend_image }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          cat > /tmp/team04_deploy_remote.sh <<EOF
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          if ! command -v docker >/dev/null 2>&1; then
+            if command -v dnf >/dev/null 2>&1; then
+              dnf -y install docker
+            elif command -v yum >/dev/null 2>&1; then
+              yum -y install docker
+            elif command -v apt-get >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y docker.io
+            else
+              echo "지원하지 않는 패키지 매니저 환경입니다."
               exit 1
             fi
+          fi
 
-            docker ps --filter "name=team04-backend"
+          systemctl enable --now docker || true
+
+          if ! command -v curl >/dev/null 2>&1; then
+            if command -v dnf >/dev/null 2>&1; then
+              dnf -y install curl
+            elif command -v yum >/dev/null 2>&1; then
+              yum -y install curl
+            elif command -v apt-get >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y curl
+            fi
+          fi
+
+          mkdir -p /home/ec2-user/app
+          cd /home/ec2-user/app
+
+          printf '%s' '${GHCR_TOKEN}' | docker login ghcr.io -u '${GHCR_USERNAME}' --password-stdin
+
+          cat > backend.env <<'ENV_EOF'
+          SPRING_PROFILES_ACTIVE=dev
+          MAIL_USERNAME=${MAIL_USERNAME}
+          MAIL_PASSWORD=${MAIL_PASSWORD}
+          AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+          AWS_SECRET_KEY=${AWS_SECRET_KEY}
+          AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+          JWT_SECRET_KEY=${JWT_SECRET_KEY}
+          GEMINI_API_KEY=${GEMINI_API_KEY}
+          ENV_EOF
+
+          docker pull '${BACKEND_IMAGE}'
+          docker stop team04-backend >/dev/null 2>&1 || true
+          docker rm team04-backend >/dev/null 2>&1 || true
+
+          docker run -d \
+            --name team04-backend \
+            --restart unless-stopped \
+            --env-file /home/ec2-user/app/backend.env \
+            -p 8080:8080 \
+            '${BACKEND_IMAGE}'
+
+          ok=0
+          for i in \$(seq 1 20); do
+            if curl -fsS http://localhost:8080/actuator/health >/dev/null; then
+              echo "backend healthcheck: OK"
+              ok=1
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "\$ok" -ne 1 ]; then
+            echo "backend healthcheck: FAIL"
+            docker logs --tail 200 team04-backend || true
+            exit 1
+          fi
+
+          docker ps --filter "name=team04-backend"
+          EOF
+
+          SCRIPT_B64="$(base64 -w0 /tmp/team04_deploy_remote.sh)"
+
+          cat > /tmp/ssm-params.json <<JSON
+          {
+            "commands": [
+              "echo ${SCRIPT_B64} | base64 -d > /tmp/team04_deploy_remote.sh",
+              "chmod +x /tmp/team04_deploy_remote.sh",
+              "bash /tmp/team04_deploy_remote.sh"
+            ]
+          }
+          JSON
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${INSTANCE_ID}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "team04 backend deploy" \
+            --parameters file:///tmp/ssm-params.json \
+            --query "Command.CommandId" \
+            --output text)
+
+          set +e
+          aws ssm wait command-executed \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}"
+          WAIT_EXIT=$?
+          set -e
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}" \
+            --query "Status" \
+            --output text)
+
+          echo "SSM command status: ${STATUS}"
+          aws ssm get-command-invocation --command-id "${COMMAND_ID}" --instance-id "${INSTANCE_ID}" --query "StandardOutputContent" --output text || true
+          aws ssm get-command-invocation --command-id "${COMMAND_ID}" --instance-id "${INSTANCE_ID}" --query "StandardErrorContent" --output text || true
+
+          if [ "${WAIT_EXIT}" -ne 0 ] || [ "${STATUS}" != "Success" ]; then
+            exit 1
+          fi
