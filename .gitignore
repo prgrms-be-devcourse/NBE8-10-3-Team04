@@ -3,3 +3,4 @@
 *.db
 .vercel
 .env
+.env.deploy

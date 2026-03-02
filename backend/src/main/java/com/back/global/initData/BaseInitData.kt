@@ -32,6 +32,9 @@ class BaseInitData(
         self.createDefaultCategory()
         self.createDefaultUsers()
         self.initItems()
+
+        // 대규모 더미 데이터 생성 메서드 호출 추가
+        self.createDummyDataForLoadTest()
     }
 
     @Transactional
@@ -115,5 +118,52 @@ class BaseInitData(
                 cycleDays = "3m"
             )
         )
+    }
+
+    // 대규모 더미 데이터 생성 메서드
+    // 한 번에 5만 개를 저장하므로 메모리 초과를 막기 위해 @Transactional을 안함
+    fun createDummyDataForLoadTest() {
+        // 이미 1000번째 유저가 존재하면 생성 스킵 (서버 켤 때마다 중복 생성 방지)
+        if (userService.findByLoginId("testuser1000") != null) return
+
+        println("=========================================================")
+        println(" 부하 테스트용 대규모 더미 데이터 생성을 시작합니다...")
+        println("   (유저 1,000명 / 아이템 50,000개 - 약 1~2분 소요될 수 있습니다)")
+        println("=========================================================")
+
+        val categories = categoryRepository.findAll()
+        if (categories.isEmpty()) return
+
+        val cycleOptions = listOf("7d", "14d", "21d", "1m", "3m", "6m", "1y")
+
+        // 3번부터 1000번까지 998명의 유저 생성 (각 유저당 50개의 아이템)
+        for (i in 3..1000) {
+            val user = userService.join("testuser$i", "1234", "testuser$i@test.com")
+
+            for (j in 1..50) {
+                val randomCategory = categories.random()
+                itemService.createItem(
+                    user.persistedId,
+                    ItemCreateRequest(
+                        categoryId = randomCategory.id!!,
+                        name = "더미 아이템 ${user.loginId}-$j",
+                        imgUrl = "https://example.com/dummy.png",
+                        image = null,
+                        // 최근 300일 이내의 랜덤한 날짜로 시작일 설정
+                        startDate = LocalDate.now().minusDays((1..300).random().toLong()),
+                        cycleDays = cycleOptions.random()
+                    )
+                )
+            }
+
+            // 진행 상황 콘솔 출력 (100명 단위)
+            if (i % 100 == 0) {
+                println("⏳ 더미 데이터 생성 진행 중... (유저 $i / 1000 명 완료)")
+            }
+        }
+
+        println("=========================================================")
+        println(" 대규모 더미 데이터(유저 1,000명 / 아이템 50,000개) 생성 완료!")
+        println("=========================================================")
     }
 }

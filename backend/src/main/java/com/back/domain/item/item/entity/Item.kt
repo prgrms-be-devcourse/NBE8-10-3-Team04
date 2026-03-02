@@ -12,59 +12,59 @@ import java.time.LocalDate
 class Item(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    var user: User?,
+    var user: User, // Non-null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    var category: Category?,
+    var category: Category, // Non-null
 
-    var name: String?,
+    @Column(nullable = false)
+    var name: String, // Non-null
 
     @Column(length = 2048)
-    var imgUrl: String?,
+    var imgUrl: String?, // 이미지는 없을 수도 있으므로 유지 (Nullable이 맞음)
 
-    var startDate: LocalDate?,
+    @Column(nullable = false)
+    var startDate: LocalDate, // Non-null
 
-    var cycleDays: String?,
+    @Column(nullable = false)
+    var cycleDays: String, // Non-null
 
-    var nextReplacementDate: LocalDate?,
+    @Column(nullable = false)
+    var nextReplacementDate: LocalDate, // Non-null
 
     var isActive: Boolean = true
 ) {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    var id: Long? = null // DB에서 생성되므로 Nullable 유지
 
-    // 💡 JPA(Hibernate)가 사용할 빈 생성자 유지
-    protected constructor() : this(
-        user = null,
-        category = null,
-        name = null,
-        imgUrl = null,
-        startDate = null,
-        cycleDays = null,
-        nextReplacementDate = null,
-        isActive = true
-    )
+    // JPA를 위한 기본 생성자는 kotlin-jpa 플러그인이 알아서 만들어주므로 완전히 삭제
 
     @OneToMany(mappedBy = "item", cascade = [CascadeType.ALL], orphanRemoval = true)
     var itemHistories: MutableList<ItemHistory> = mutableListOf()
 
-    fun modifyDate(startDate: LocalDate?, nextReplacementDate: LocalDate?) {
+    // 메서드 파라미터들도 명확하게 Non-null로 변경
+    fun modifyDate(startDate: LocalDate, nextReplacementDate: LocalDate) {
         this.startDate = startDate
         this.nextReplacementDate = nextReplacementDate
     }
 
-    fun validateOwner(actorUserId: Long?) {
-        if (this.user?.id != actorUserId) {
+    fun validateOwner(actorUserId: Long) {
+        // user가 Non-null이 되었으므로 안전하게 접근 가능
+        if (this.user.id != actorUserId) {
             throw ServiceException("403-1", "${this.id}번 아이템에 대한 권한이 없습니다.")
         }
     }
 
     fun modify(
-        category: Category?, name: String?, imgUrl: String?, cycleDays: String?,
-        nextReplacementDate: LocalDate?, isActive: Boolean
+        category: Category,
+        name: String,
+        imgUrl: String?, // 이미지는 수정 시에도 지울 수 있거나 없을 수 있으니 Nullable
+        cycleDays: String,
+        nextReplacementDate: LocalDate,
+        isActive: Boolean
     ) {
         this.category = category
         this.name = name
@@ -75,7 +75,7 @@ class Item(
     }
 
     val lastReplacementDate: LocalDate?
-        get() = itemHistories.maxOfOrNull { it.startDate ?: LocalDate.MIN }
+        get() = itemHistories.maxOfOrNull { it.startDate } // startDate도 Non-null이라면 좀 더 깔끔
 
     fun toggleActive() {
         this.isActive = !this.isActive
