@@ -20,17 +20,21 @@ services:
   backend-blue:
     image: ${BACKEND_IMAGE}
     restart: unless-stopped
+    stop_grace_period: 40s
     env_file:
       - ../../.env.deploy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       APP_COLOR: blue
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 30s
     depends_on:
       mysql:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
-      interval: 15s
+      start_period: 20s
+      interval: 5s
       timeout: 5s
       retries: 20
     networks:
@@ -39,17 +43,21 @@ services:
   backend-green:
     image: ${BACKEND_IMAGE}
     restart: unless-stopped
+    stop_grace_period: 40s
     env_file:
       - ../../.env.deploy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       APP_COLOR: green
+      SERVER_SHUTDOWN: graceful
+      SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 30s
     depends_on:
       mysql:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
-      interval: 15s
+      start_period: 20s
+      interval: 5s
       timeout: 5s
       retries: 20
     networks:
