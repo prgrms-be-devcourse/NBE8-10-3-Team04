@@ -1,45 +1,56 @@
-name: CI/CD Pipeline
+name: Deploy Blue-Green
 
 on:
   push:
     branches: [ main ]
+  # GitHub Actions UI에서 현재 브랜치를 선택해 수동 배포 테스트할 때 사용
+  workflow_dispatch:
+
+env:
+  # 퍼블릭 IP 기반 운영 값입니다. 인스턴스 IP가 바뀌면 이 값도 함께 수정해야 합니다.
+  PUBLIC_API_BASE_URL: http://100.53.52.159/api
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false
 
 jobs:
-  # 1. 빌드 및 이미지 생성
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    outputs:
+      backend_image: ${{ steps.meta.outputs.backend_image }}
+      frontend_image: ${{ steps.meta.outputs.frontend_image }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # (백엔드 빌드)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
 
-      - name: Build Backend
+      - name: Build backend jar
         run: |
-          chmod +x ./backend/gradlew
           cd backend
+          chmod +x gradlew
           ./gradlew bootJar -x test
 
-      # (프론트엔드 빌드 - 테스트용)
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
-      - name: Build Frontend (Test Build)
+      - name: Build frontend
         run: |
           cd frontend
           npm ci
           npm run build
 
-      # (Docker 로그인)
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -47,51 +58,62 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # (백엔드 이미지 빌드 & 푸시)
-      - name: Build and push Backend Image
+      - name: Set image metadata
+        id: meta
+        run: |
+          echo "backend_image=ghcr.io/${{ github.repository }}/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "frontend_image=ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
-          tags: ghcr.io/prgrms-be-devcourse/nbe8-10-2-team04/backend:latest
+          tags: |
+            ${{ steps.meta.outputs.backend_image }}
+            ghcr.io/${{ github.repository }}/backend:latest
 
-      # (프론트엔드 이미지 빌드 & 푸시)
-      - name: Build and push Frontend Image
+      - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
-          tags: ghcr.io/prgrms-be-devcourse/nbe8-10-2-team04/frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=http://43.203.2.175:8080
+            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
+          tags: |
+            ${{ steps.meta.outputs.frontend_image }}
+            ghcr.io/${{ github.repository }}/frontend:latest
 
-  # 2. 서버에 배포 명령 내리기
   deploy:
-    needs: build-and-push
     runs-on: ubuntu-latest
+    needs: build-and-push
     steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
+      - name: Deploy on AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_KEY }}
+          host: ${{ secrets.AWS_SERVER_HOST }}
+          username: ec2-user
+          key: ${{ secrets.AWS_SERVER_SSH_KEY }}
           script: |
-            echo "🚀 배포 시작..."
-            
-            # Docker 로그인 (토큰으로 로그인)
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # 프로젝트 폴더로 이동
-            cd my-app
-            
-            # 최신 이미지 다운로드
-            docker compose pull
-            
-            # 컨테이너 재시작 (변경된 것만)
-            docker compose up -d
-            
-            # 안 쓰는 이미지 정리
-            docker image prune -f
-            
-            echo "✅ 배포 완료!"
+            set -euo pipefail
+            cd /home/ec2-user/app
+
+            cat > .env.deploy <<EOF
+            BACKEND_IMAGE=${{ needs.build-and-push.outputs.backend_image }}
+            FRONTEND_IMAGE=${{ needs.build-and-push.outputs.frontend_image }}
+            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
+            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+            MYSQL_APP_USER=${{ secrets.MYSQL_APP_USER }}
+            MYSQL_APP_PASSWORD=${{ secrets.MYSQL_APP_PASSWORD }}
+            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+            AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            EOF
+
+            chmod +x deploy/scripts/*.sh
+            ./deploy/scripts/deploy.sh
