@@ -85,6 +85,7 @@ class ItemService(
     }
 
     //카테고리별 목록조회용
+    @Transactional(readOnly = true)
     fun findAllByUserIdAndCategoryId(userId: Long, categoryId: Long): List<Item> {
         if (!categoryRepository.existsById(categoryId)) {
             throw ServiceException(ErrorCode.CATEGORY_NOT_FOUND)
