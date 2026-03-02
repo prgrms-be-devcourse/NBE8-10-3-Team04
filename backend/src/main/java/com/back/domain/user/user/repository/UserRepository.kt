@@ -9,5 +9,8 @@ import java.util.*
 interface UserRepository : JpaRepository<User, Long> {
     fun findByLoginId(loginId: String): User?
 
+    // 존재 여부만 확인하는 메서드 추가
+    fun existsByLoginId(loginId: String): Boolean
+
     fun findByApiKey(apiKey: String): User?
 }
