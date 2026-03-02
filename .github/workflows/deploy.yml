@@ -61,8 +61,8 @@ jobs:
       - name: Set image metadata
         id: meta
         run: |
-          echo "backend_image=ghcr.io/${{ github.repository }}/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          echo "frontend_image=ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "backend_image=ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "frontend_image=ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/frontend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
@@ -71,7 +71,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.backend_image }}
-            ghcr.io/${{ github.repository }}/backend:latest
+            ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/backend:latest
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
@@ -82,7 +82,7 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
           tags: |
             ${{ steps.meta.outputs.frontend_image }}
-            ghcr.io/${{ github.repository }}/frontend:latest
+            ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/frontend:latest
 
   deploy:
     runs-on: ubuntu-latest
