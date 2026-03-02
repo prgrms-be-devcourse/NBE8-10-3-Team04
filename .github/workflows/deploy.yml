@@ -99,8 +99,8 @@ jobs:
             set -euo pipefail
             cd /home/ec2-user/app
 
-            # GHCR 인증 (private package pull용 PAT)
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+            # GHCR 인증 (워크플로우 실행 중 발급되는 GITHUB_TOKEN 사용)
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             cat > .env.deploy <<EOF
             BACKEND_IMAGE=${{ needs.build-and-push.outputs.backend_image }}
