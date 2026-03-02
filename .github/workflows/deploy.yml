@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 env:
-  # 퍼블릭 IP 기반 운영 값입니다. 인스턴스 IP가 바뀌면 이 값도 함께 수정해야 합니다.
-  PUBLIC_API_BASE_URL: http://100.53.52.159/api
+  # AWS_SERVER_HOST(호스트/IP) 하나만 변경하면 프론트 API 주소도 함께 반영됩니다.
+  PUBLIC_API_BASE_URL: http://${{ secrets.AWS_SERVER_HOST }}
 
 permissions:
   contents: read
