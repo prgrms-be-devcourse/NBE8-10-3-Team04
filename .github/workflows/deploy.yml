@@ -1,21 +1,16 @@
-name: Deploy Blue-Green
+name: Deploy Backend Only
 
 on:
   push:
     branches: [ main ]
-  # GitHub Actions UI에서 현재 브랜치를 선택해 수동 배포 테스트할 때 사용
   workflow_dispatch:
-
-env:
-  # AWS_SERVER_HOST(호스트/IP) 하나만 변경하면 프론트 API 주소도 함께 반영됩니다.
-  PUBLIC_API_BASE_URL: http://${{ secrets.AWS_SERVER_HOST }}
 
 permissions:
   contents: read
   packages: write
 
 concurrency:
-  group: deploy-ec2
+  group: deploy-backend-only
   cancel-in-progress: false
 
 jobs:
@@ -23,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       backend_image: ${{ steps.meta.outputs.backend_image }}
-      frontend_image: ${{ steps.meta.outputs.frontend_image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,12 +41,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set image metadata
+      - name: Set backend image metadata
         id: meta
         run: |
           echo "backend_image=ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          # lite 모드에서는 프론트를 기동하지 않지만, compose 변수 치환을 위해 값은 유지
-          echo "frontend_image=ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/frontend:latest" >> "$GITHUB_OUTPUT"
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
@@ -67,37 +59,58 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     steps:
-      - name: Deploy on AWS EC2
+      - name: Deploy backend on AWS EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.AWS_SERVER_HOST }}
           username: ec2-user
           key: ${{ secrets.AWS_SERVER_SSH_KEY }}
-          command_timeout: 30m
+          command_timeout: 15m
           script: |
             set -euo pipefail
+            mkdir -p /home/ec2-user/app
             cd /home/ec2-user/app
 
-            # GHCR 인증 (워크플로우 실행 중 발급되는 GITHUB_TOKEN 사용)
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            # GHCR private 패키지 pull 인증
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
-            cat > .env.deploy <<EOF
-            BACKEND_IMAGE=${{ needs.build-and-push.outputs.backend_image }}
-            FRONTEND_IMAGE=${{ needs.build-and-push.outputs.frontend_image }}
-            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
-            DEPLOY_MODE=lite
-            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            MYSQL_APP_USER=${{ secrets.MYSQL_APP_USER }}
-            MYSQL_APP_PASSWORD=${{ secrets.MYSQL_APP_PASSWORD }}
+            # 백엔드 단독 실행용 환경변수 파일
+            cat > backend.env <<EOF
+            SPRING_PROFILES_ACTIVE=dev
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
             AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
             AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
-            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             EOF
 
-            chmod +x deploy/scripts/*.sh
-            ./deploy/scripts/deploy.sh
+            docker pull "${{ needs.build-and-push.outputs.backend_image }}"
+            docker stop team04-backend >/dev/null 2>&1 || true
+            docker rm team04-backend >/dev/null 2>&1 || true
+
+            docker run -d \
+              --name team04-backend \
+              --restart unless-stopped \
+              --env-file /home/ec2-user/app/backend.env \
+              -p 8080:8080 \
+              "${{ needs.build-and-push.outputs.backend_image }}"
+
+            # 기동 확인
+            ok=0
+            for i in $(seq 1 20); do
+              if curl -fsS http://localhost:8080/actuator/health >/dev/null; then
+                echo "backend healthcheck: OK"
+                ok=1
+                break
+              fi
+              sleep 3
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "backend healthcheck: FAIL"
+              docker logs --tail 200 team04-backend || true
+              exit 1
+            fi
+
+            docker ps --filter "name=team04-backend"
