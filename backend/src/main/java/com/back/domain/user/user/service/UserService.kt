@@ -23,7 +23,10 @@ class UserService(
 
     @Transactional
     fun join(loginId: String, password: String, email: String): User {
-        if (userRepository.findByLoginId(loginId) != null) {
+//        if (userRepository.findByLoginId(loginId) != null) {
+//            throw ServiceException(ErrorCode.DUPLICATE_LOGIN_ID)
+//        }
+        if (userRepository.existsByLoginId(loginId)) {
             throw ServiceException(ErrorCode.DUPLICATE_LOGIN_ID)
         }
 
