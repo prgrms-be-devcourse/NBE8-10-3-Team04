@@ -106,6 +106,7 @@ jobs:
             BACKEND_IMAGE=${{ needs.build-and-push.outputs.backend_image }}
             FRONTEND_IMAGE=${{ needs.build-and-push.outputs.frontend_image }}
             NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
+            DEPLOY_MODE=lite
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
             MYSQL_APP_USER=${{ secrets.MYSQL_APP_USER }}

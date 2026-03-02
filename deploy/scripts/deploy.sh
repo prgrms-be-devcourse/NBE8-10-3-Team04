@@ -8,6 +8,7 @@ COMPOSE_FILE="${DEPLOY_DIR}/compose/bluegreen.yml"
 ENV_FILE="${ROOT_DIR}/.env.deploy"
 NGINX_CONF_DIR="${DEPLOY_DIR}/nginx/conf.d"
 BLUE_CONF="${NGINX_CONF_DIR}/active.conf"
+LITE_CONF="${NGINX_CONF_DIR}/active-lite.conf"
 CURRENT_CONF="${NGINX_CONF_DIR}/current.conf"
 ACTIVE_FILE="${DEPLOY_DIR}/ACTIVE_COLOR"
 
@@ -18,6 +19,11 @@ fi
 
 if [[ ! -f "${BLUE_CONF}" ]]; then
   echo "nginx 라우팅 파일이 없습니다: ${BLUE_CONF}"
+  exit 1
+fi
+
+if [[ ! -f "${LITE_CONF}" ]]; then
+  echo "nginx 경량 라우팅 파일이 없습니다: ${LITE_CONF}"
   exit 1
 fi
 
@@ -63,35 +69,71 @@ wait_for_service() {
   return 1
 }
 
-echo "[1/8] nginx 라우팅을 blue로 고정"
-cp "${BLUE_CONF}" "${CURRENT_CONF}"
-echo "blue" > "${ACTIVE_FILE}"
+DEPLOY_MODE="${DEPLOY_MODE:-lite}"
+echo "배포 모드: ${DEPLOY_MODE}"
 
-echo "[2/8] 이미지 pull (순차)"
-dc pull mysql
-dc pull backend-blue
-dc pull frontend
-dc pull nginx
+if [[ "${DEPLOY_MODE}" == "lite" ]]; then
+  echo "[1/8] nginx 라우팅을 lite(API 전용)로 고정"
+  cp "${LITE_CONF}" "${CURRENT_CONF}"
+  echo "blue-lite" > "${ACTIVE_FILE}"
 
-echo "[3/8] mysql 기동"
-dc up -d mysql
-wait_for_service mysql 240
+  echo "[2/8] 이미지 pull (mysql, backend-blue, nginx)"
+  dc pull mysql
+  dc pull backend-blue
+  dc pull nginx
 
-echo "[4/8] backend-blue 기동"
-dc up -d backend-blue
-wait_for_service backend-blue 240
+  echo "[3/8] mysql 기동"
+  dc up -d mysql
+  wait_for_service mysql 240
 
-echo "[5/8] frontend 기동"
-dc up -d frontend
-wait_for_service frontend 180
+  echo "[4/8] backend-blue 기동"
+  dc up -d backend-blue
+  wait_for_service backend-blue 240
 
-echo "[6/8] nginx 기동"
-dc up -d nginx
-wait_for_service nginx 120
+  echo "[5/8] nginx 기동"
+  dc up -d nginx
+  wait_for_service nginx 120
 
-echo "[7/8] green 백엔드는 중지 (리소스 절약)"
-dc stop backend-green >/dev/null 2>&1 || true
+  echo "[6/8] 미사용 서비스 정리"
+  dc stop backend-green >/dev/null 2>&1 || true
+  dc stop frontend >/dev/null 2>&1 || true
 
-echo "[8/8] 상태 확인"
-dc ps
-echo "순차 배포 완료 (blue 고정)"
+  echo "[7/8] 상태 확인"
+  dc ps
+
+  echo "[8/8] 완료"
+  echo "경량 배포 완료 (mysql + backend-blue + nginx)"
+else
+  echo "[1/8] nginx 라우팅을 blue로 고정"
+  cp "${BLUE_CONF}" "${CURRENT_CONF}"
+  echo "blue" > "${ACTIVE_FILE}"
+
+  echo "[2/8] 이미지 pull (순차)"
+  dc pull mysql
+  dc pull backend-blue
+  dc pull frontend
+  dc pull nginx
+
+  echo "[3/8] mysql 기동"
+  dc up -d mysql
+  wait_for_service mysql 240
+
+  echo "[4/8] backend-blue 기동"
+  dc up -d backend-blue
+  wait_for_service backend-blue 240
+
+  echo "[5/8] frontend 기동"
+  dc up -d frontend
+  wait_for_service frontend 180
+
+  echo "[6/8] nginx 기동"
+  dc up -d nginx
+  wait_for_service nginx 120
+
+  echo "[7/8] green 백엔드는 중지 (리소스 절약)"
+  dc stop backend-green >/dev/null 2>&1 || true
+
+  echo "[8/8] 상태 확인"
+  dc ps
+  echo "순차 배포 완료 (blue 고정)"
+fi
