@@ -11,6 +11,8 @@ NGINX_CONF_DIR="${DEPLOY_DIR}/nginx/conf.d"
 BLUE_CONF="${NGINX_CONF_DIR}/active.conf"
 GREEN_CONF="${NGINX_CONF_DIR}/active-green.conf"
 CURRENT_CONF="${NGINX_CONF_DIR}/current.conf"
+DRAIN_SECONDS="${DRAIN_SECONDS:-10}"
+STOP_TIMEOUT_SECONDS="${STOP_TIMEOUT_SECONDS:-35}"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo ".env.deploy 파일이 필요합니다: ${ENV_FILE}"
@@ -118,9 +120,9 @@ wait_with_retry \
 
 if [[ "${CURRENT_COLOR}" == "blue" || "${CURRENT_COLOR}" == "green" ]]; then
   if [[ "${CURRENT_COLOR}" != "${TARGET_COLOR}" ]]; then
-    echo "기존 백엔드 드레이닝 후 정리..."
-    sleep 10
-    dc stop "backend-${CURRENT_COLOR}" || true
+    echo "기존 백엔드 드레이닝(${DRAIN_SECONDS}s) 후 정리..."
+    sleep "${DRAIN_SECONDS}"
+    dc stop -t "${STOP_TIMEOUT_SECONDS}" "backend-${CURRENT_COLOR}" || true
   fi
 fi
 
