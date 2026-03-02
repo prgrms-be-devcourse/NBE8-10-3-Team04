@@ -114,12 +114,12 @@ dc_up_with_timeout "backend-${TARGET_COLOR} up" "backend-${TARGET_COLOR}"
 echo "대상 백엔드 헬스체크..."
 wait_with_retry \
   "backend-${TARGET_COLOR} /actuator/health" \
-  "dc exec -T nginx sh -lc 'wget -qO- http://backend-${TARGET_COLOR}:8080/actuator/health | grep -q UP'"
+  "dc exec -T nginx sh -lc 'wget --tries=1 --timeout=2 -qO- http://backend-${TARGET_COLOR}:8080/actuator/health | grep -q UP'"
 
 echo "프론트엔드 헬스체크..."
 wait_with_retry \
   "frontend /" \
-  "dc exec -T nginx sh -lc 'wget -qO- http://frontend:3000 > /dev/null'"
+  "dc exec -T nginx sh -lc 'wget --tries=1 --timeout=2 -qO- http://frontend:3000 > /dev/null'"
 
 echo "트래픽 전환..."
 switch_backend_route "${TARGET_COLOR}"
@@ -127,7 +127,7 @@ switch_backend_route "${TARGET_COLOR}"
 echo "전환 후 nginx 응답 확인..."
 wait_with_retry \
   "nginx / 응답" \
-  "dc exec -T nginx sh -lc 'wget -qO- http://localhost > /dev/null'" \
+  "dc exec -T nginx sh -lc 'wget --tries=1 --timeout=2 -qO- http://localhost > /dev/null'" \
   10 \
   1
 
