@@ -173,7 +173,8 @@ echo green > deploy/ACTIVE_COLOR
 - `GEMINI_API_KEY`
 
 참고:
-- `NEXT_PUBLIC_API_BASE_URL`은 현재 워크플로우 파일 내 `PUBLIC_API_BASE_URL` 환경값으로 관리
+- `NEXT_PUBLIC_API_BASE_URL`은 워크플로우에서 `AWS_SERVER_HOST`를 기준으로 자동 생성
+- `AWS_SERVER_HOST`에는 `http://`/`https://`/경로(`/api`) 없이 호스트(IP 또는 DNS)만 입력
 
 ---
 
