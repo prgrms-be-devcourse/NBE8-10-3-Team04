@@ -3,6 +3,7 @@ package com.back.domain.user.user.service
 import com.back.domain.item.item.entity.Item
 import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.repository.UserRepository
+import com.back.global.event.S3ImageDeleteEvent
 import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import com.back.global.s3.S3ImageService
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.util.Optional
 
@@ -36,6 +38,9 @@ internal class UserServiceTest {
 
     @Mock
     private lateinit var s3ImageService: S3ImageService
+
+    @Mock
+    lateinit var eventPublisher: ApplicationEventPublisher
 
     @InjectMocks
     private lateinit var userService: UserService
@@ -151,20 +156,13 @@ internal class UserServiceTest {
         userService.deleteById(userId)
 
         BDDMockito.then(userRepository).should().findById(userId)
-
-        // S3 서비스 삭제 메서드에 전달된 URL 리스트를 ArgumentCaptor로 포착
-        val captor = argumentCaptor<List<String>>()
-
-        BDDMockito.then(s3ImageService).should().deleteMultiple(captor.capture())
-
-        val capturedUrls = captor.firstValue
-        assertThat(capturedUrls)
-            .hasSize(2)
-            .containsExactlyInAnyOrder(
+        val expectedEvent = S3ImageDeleteEvent(
+            listOf(
                 "https://s3.amazonaws.com/bucket/image1.jpg",
                 "https://s3.amazonaws.com/bucket/image2.jpg"
             )
-
+        )
+        BDDMockito.then(eventPublisher).should().publishEvent(expectedEvent)
         BDDMockito.then(userRepository).should().deleteById(userId)
     }
 
@@ -182,7 +180,7 @@ internal class UserServiceTest {
 
         BDDMockito.then(userRepository).should().findById(userId)
         // 이미지가 없으므로 S3 삭제 로직은 호출되지 않아야 함
-        BDDMockito.then(s3ImageService).should(BDDMockito.never()).deleteMultiple(any<List<String>>())
+        BDDMockito.then(eventPublisher).should(BDDMockito.never()).publishEvent(any<Any>())
         BDDMockito.then(userRepository).should().deleteById(userId)
 
     }

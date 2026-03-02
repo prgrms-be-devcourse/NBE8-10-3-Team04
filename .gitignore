@@ -2,8 +2,5 @@
 .DS_Store
 *.db
 .vercel
-<<<<<<< test/be/load-test-1k-vcus/148
 .env
-=======
 .env.deploy
->>>>>>> dev
