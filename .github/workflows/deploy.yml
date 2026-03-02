@@ -1,21 +1,16 @@
-name: Deploy Blue-Green
+name: Deploy Backend Only
 
 on:
   push:
     branches: [ main ]
-  # GitHub Actions UI에서 현재 브랜치를 선택해 수동 배포 테스트할 때 사용
   workflow_dispatch:
-
-env:
-  # 퍼블릭 IP 기반 운영 값입니다. 인스턴스 IP가 바뀌면 이 값도 함께 수정해야 합니다.
-  PUBLIC_API_BASE_URL: http://100.53.52.159/api
 
 permissions:
   contents: read
   packages: write
 
 concurrency:
-  group: deploy-ec2
+  group: deploy-backend-only
   cancel-in-progress: false
 
 jobs:
@@ -23,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       backend_image: ${{ steps.meta.outputs.backend_image }}
-      frontend_image: ${{ steps.meta.outputs.frontend_image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,17 +34,6 @@ jobs:
           chmod +x gradlew
           ./gradlew bootJar -x test
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -58,11 +41,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set image metadata
+      - name: Set backend image metadata
         id: meta
         run: |
-          echo "backend_image=ghcr.io/${{ github.repository }}/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          echo "frontend_image=ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "backend_image=ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/backend:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
@@ -71,49 +53,166 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.backend_image }}
-            ghcr.io/${{ github.repository }}/backend:latest
-
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          build-args: |
-            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
-          tags: |
-            ${{ steps.meta.outputs.frontend_image }}
-            ghcr.io/${{ github.repository }}/frontend:latest
+            ghcr.io/prgrms-be-devcourse/nbe8-10-3-team04/backend:latest
 
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-push
+    env:
+      AWS_REGION: ap-northeast-2
+      TARGET_INSTANCE_ID: i-059a3fb0104c38732
     steps:
-      - name: Deploy on AWS EC2
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.AWS_SERVER_HOST }}
-          username: ec2-user
-          key: ${{ secrets.AWS_SERVER_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            cd /home/ec2-user/app
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
-            cat > .env.deploy <<EOF
-            BACKEND_IMAGE=${{ needs.build-and-push.outputs.backend_image }}
-            FRONTEND_IMAGE=${{ needs.build-and-push.outputs.frontend_image }}
-            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
-            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            MYSQL_APP_USER=${{ secrets.MYSQL_APP_USER }}
-            MYSQL_APP_PASSWORD=${{ secrets.MYSQL_APP_PASSWORD }}
-            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
-            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
-            AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
-            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            EOF
+      - name: Check target instance SSM status
+        run: |
+          set -euo pipefail
+          INSTANCE_ID="${TARGET_INSTANCE_ID}"
+          PING_STATUS=$(aws ssm describe-instance-information \
+            --filters "Key=InstanceIds,Values=${INSTANCE_ID}" \
+            --query "InstanceInformationList[0].PingStatus" \
+            --output text 2>/dev/null || true)
 
-            chmod +x deploy/scripts/*.sh
-            ./deploy/scripts/deploy.sh
+          if [ "${PING_STATUS}" != "Online" ]; then
+            echo "대상 인스턴스(${INSTANCE_ID})가 SSM Online 상태가 아닙니다. IAM Role(AmazonSSMManagedInstanceCore) 및 SSM Agent 상태를 확인하세요."
+            exit 1
+          fi
+
+      - name: Deploy backend via AWS SSM
+        env:
+          INSTANCE_ID: ${{ env.TARGET_INSTANCE_ID }}
+          BACKEND_IMAGE: ${{ needs.build-and-push.outputs.backend_image }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          cat > /tmp/team04_deploy_remote.sh <<EOF
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          if ! command -v docker >/dev/null 2>&1; then
+            if command -v dnf >/dev/null 2>&1; then
+              dnf -y install docker
+            elif command -v yum >/dev/null 2>&1; then
+              yum -y install docker
+            elif command -v apt-get >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y docker.io
+            else
+              echo "지원하지 않는 패키지 매니저 환경입니다."
+              exit 1
+            fi
+          fi
+
+          systemctl enable --now docker || true
+
+          if ! command -v curl >/dev/null 2>&1; then
+            if command -v dnf >/dev/null 2>&1; then
+              dnf -y install curl
+            elif command -v yum >/dev/null 2>&1; then
+              yum -y install curl
+            elif command -v apt-get >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y curl
+            fi
+          fi
+
+          mkdir -p /home/ec2-user/app
+          cd /home/ec2-user/app
+
+          printf '%s' '${GHCR_TOKEN}' | docker login ghcr.io -u '${GHCR_USERNAME}' --password-stdin
+
+          cat > backend.env <<'ENV_EOF'
+          SPRING_PROFILES_ACTIVE=dev
+          MAIL_USERNAME=${MAIL_USERNAME}
+          MAIL_PASSWORD=${MAIL_PASSWORD}
+          AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+          AWS_SECRET_KEY=${AWS_SECRET_KEY}
+          AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+          JWT_SECRET_KEY=${JWT_SECRET_KEY}
+          GEMINI_API_KEY=${GEMINI_API_KEY}
+          ENV_EOF
+
+          docker pull '${BACKEND_IMAGE}'
+          docker stop team04-backend >/dev/null 2>&1 || true
+          docker rm team04-backend >/dev/null 2>&1 || true
+
+          docker run -d \
+            --name team04-backend \
+            --restart unless-stopped \
+            --env-file /home/ec2-user/app/backend.env \
+            -p 8080:8080 \
+            '${BACKEND_IMAGE}'
+
+          ok=0
+          for i in \$(seq 1 20); do
+            if curl -fsS http://localhost:8080/actuator/health >/dev/null; then
+              echo "backend healthcheck: OK"
+              ok=1
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "\$ok" -ne 1 ]; then
+            echo "backend healthcheck: FAIL"
+            docker logs --tail 200 team04-backend || true
+            exit 1
+          fi
+
+          docker ps --filter "name=team04-backend"
+          EOF
+
+          SCRIPT_B64="$(base64 -w0 /tmp/team04_deploy_remote.sh)"
+
+          cat > /tmp/ssm-params.json <<JSON
+          {
+            "commands": [
+              "echo ${SCRIPT_B64} | base64 -d > /tmp/team04_deploy_remote.sh",
+              "chmod +x /tmp/team04_deploy_remote.sh",
+              "bash /tmp/team04_deploy_remote.sh"
+            ]
+          }
+          JSON
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${INSTANCE_ID}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "team04 backend deploy" \
+            --parameters file:///tmp/ssm-params.json \
+            --query "Command.CommandId" \
+            --output text)
+
+          set +e
+          aws ssm wait command-executed \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}"
+          WAIT_EXIT=$?
+          set -e
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "${COMMAND_ID}" \
+            --instance-id "${INSTANCE_ID}" \
+            --query "Status" \
+            --output text)
+
+          echo "SSM command status: ${STATUS}"
+          aws ssm get-command-invocation --command-id "${COMMAND_ID}" --instance-id "${INSTANCE_ID}" --query "StandardOutputContent" --output text || true
+          aws ssm get-command-invocation --command-id "${COMMAND_ID}" --instance-id "${INSTANCE_ID}" --query "StandardErrorContent" --output text || true
+
+          if [ "${WAIT_EXIT}" -ne 0 ] || [ "${STATUS}" != "Success" ]; then
+            exit 1
+          fi
