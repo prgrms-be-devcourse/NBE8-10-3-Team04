@@ -32,6 +32,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.web.multipart.MultipartFile
 import tools.jackson.databind.ObjectMapper
 import java.io.IOException
@@ -50,6 +51,7 @@ internal class ItemServiceTest {
     @Mock private lateinit var itemHistoryRepository: ItemHistoryRepository
     @Mock private lateinit var genAiClient: Client
     @Mock private lateinit var objectMapper: ObjectMapper
+    @Mock lateinit var eventPublisher: ApplicationEventPublisher
 
     @InjectMocks private lateinit var itemService: ItemService
 
@@ -237,7 +239,6 @@ internal class ItemServiceTest {
     fun modify_Success() {
         given(itemRepository.findByIdAndUserId(1L, 1L)).willReturn(testItem)
         given(categoryRepository.findById(1L)).willReturn(Optional.of(testCategory))
-        doNothing().`when`(s3ImageService).delete(anyString())
 
         val result = itemService.modify(1L, 1L, updateRequest)
 

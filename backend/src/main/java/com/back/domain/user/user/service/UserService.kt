@@ -2,9 +2,11 @@ package com.back.domain.user.user.service
 
 import com.back.domain.user.user.entity.User
 import com.back.domain.user.user.repository.UserRepository
+import com.back.global.event.S3ImageDeleteEvent
 import com.back.global.exception.ErrorCode
 import com.back.global.exception.ServiceException
 import com.back.global.s3.S3ImageService
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -16,6 +18,7 @@ class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val s3ImageService: S3ImageService,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
 
     @Transactional(readOnly = true)
@@ -45,8 +48,9 @@ class UserService(
             .mapNotNull { it.imgUrl?.takeIf(String::isNotBlank) }
 
         // API 요청 횟수 감소를 위해 S3 다중 삭제 사용
+        // S3 직접 삭제 대신 다중 삭제 이벤트 발행
         if (imageUrls.isNotEmpty()) {
-            s3ImageService.deleteMultiple(imageUrls)
+            eventPublisher.publishEvent(S3ImageDeleteEvent(imageUrls))
         }
         userRepository.deleteById(id)
     }
